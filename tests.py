@@ -1,6 +1,6 @@
 # this is me experimenting wiht image processing in python using openCV
 
-import cv2		# and this it was imported
+import cv2		# and thus it was imported
 import numpy as np
 img = cv2.imread('C:\Users\croma\Dropbox\cameraculture\image_processing\dj.jpg')	# adding a 0 as second attribute means grayscale
 
@@ -12,7 +12,7 @@ print img[0,0]			# how does this work? img[x,y,colour coordinate]. (x,y) refers 
 
 # process the image
 img[:,:,2] = 0			# the third coordinate here gives the B,G,R respectively for 0,1,2 as the value
-
+img[10:20, 10:20] = [0,0,0]		# make one small region into a box yo
 # show the image
 
 cv2.imshow('image',img[0:200, 0:450])
