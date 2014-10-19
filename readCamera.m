@@ -10,10 +10,10 @@ start(vid);
 gcf = figure;
 
 set(gcf,'CloseRequestFcn',@my_closefcn)			% setting the close request 
-hold on;										% image will persist. to close from command line can use delete(gcf)
-closeflag = 1;
+hold on;										% image will persist. to close from command line can use delete(gcf) and then delete(vid) - which is basically deleting the variables
+closeflag = 1;                                  % for now this doesn't really do anythng, but will just keep the while loop going forever
 
 while(closeflag)
-    imshow(getsnapshot(vid));
+    imshow(getsnapshot(vid));       
     pause(0.01);
 end% Preview
