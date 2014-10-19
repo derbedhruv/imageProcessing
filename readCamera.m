@@ -1,4 +1,5 @@
 % copied from Sujeath's code on 19-OCT-2014
+% now tracked by git on my github
 % This code can successfully take a stream from a webcam attached to a computer (windows) and display to screen
 
 vid = videoinput('winvideo', 1,'YUY2_320x240');          % Video Parameters
