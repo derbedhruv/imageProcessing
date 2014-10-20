@@ -18,7 +18,7 @@ while(closeflag)                                % infinite loop
     disp(size(acquired_snapshot));
     subplot(1,2,1), imshow(acquired_snapshot);  % realtime feed of the normal camera greyscale
     
-    thresholded_image = im2bw(acquired_snapshot,0.7);   % threshold karo
+    thresholded_image = im2bw(acquired_snapshot,0.4);   % threshold karo
     subplot(1,2,2), imshow(thresholded_image);  % display the image
     pause(0.001);                               % much less than 30 fps
 end% Preview
