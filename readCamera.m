@@ -15,7 +15,10 @@ closeflag = 1;                                  % for now this doesn't really do
 
 while(closeflag)                                % infinite loop
     acquired_snapshot = getsnapshot(vid);
-    thresholded_image = im2bw(acquired_snapshot,0.7);
-    imshow(thresholded_image);                   % display the image
+    disp(size(acquired_snapshot));
+    subplot(1,2,1), imshow(acquired_snapshot);  % realtime feed of the normal camera greyscale
+    
+    thresholded_image = im2bw(acquired_snapshot,0.7);   % threshold karo
+    subplot(1,2,2), imshow(thresholded_image);  % display the image
     pause(0.001);                               % much less than 30 fps
 end% Preview
