@@ -1,0 +1,5 @@
+% 19-OCT-2014
+% first I'm going to start by reading in an image and converting it to greyscale
+% I'll use imread()
+
+img = imread('pic.jpg');        % read in the pic into an array
