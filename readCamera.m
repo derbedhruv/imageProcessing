@@ -14,6 +14,8 @@ hold on;										% image will persist. to close from command line can use delet
 closeflag = 1;                                  % for now this doesn't really do anythng, but will just keep the while loop going forever
 
 while(closeflag)                                % infinite loop
-    imshow(getsnapshot(vid));                   % display the image
+    acquired_snapshot = getsnapshot(vid);
+    thresholded_image = im2bw(acquired_snapshot,0.7);
+    imshow(thresholded_image);                   % display the image
     pause(0.001);                               % much less than 30 fps
 end% Preview
