@@ -4,7 +4,8 @@
 
 % 24-OCT-2014
 % Trying out standard images to be able to see how the fft changes
-ford = 256;
+ford = 2048;     % fourier order
+dord = 2048;    % display order
 
 img = imread('test.jpg');        % read in the pic into an array
 
@@ -18,4 +19,4 @@ subplot(3,2,2), imshow(gimg,'Border','tight');
 % next we find the fourier transform of the greyscaled image...http://biocomp.cnb.csic.es/~coss/Docencia/ImageProcessing/Tutorial/
 F = fft2(gimg, ford, ford);
 F = fftshift(F);            % shift the center
-subplot(3,2,[3 6]), imshow(abs(F),[0,100]); colorbar          % asymmetrical arrangement of subplots is done this way http://matlab.izmiran.ru/help/techdoc/ref/subplot.html
+subplot(3,2,[3 6]), imshow(abs(F),[0,dord]); colorbar          % asymmetrical arrangement of subplots is done this way http://matlab.izmiran.ru/help/techdoc/ref/subplot.html
