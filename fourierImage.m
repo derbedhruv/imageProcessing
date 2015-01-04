@@ -4,21 +4,32 @@
 
 % 24-OCT-2014
 % Trying out standard images to be able to see how the fft changes
+
+% 04-JAN-2015
+% Following simple advice given on http://stackoverflow.com/questions/13549186/how-to-plot-a-2d-fft-in-matlab
+
 ford = 256;     % fourier order
 dord = 1024;    % display order
 
-img = imread('test.jpg');        % read in the pic into an array
+img = imread('fpm1.png');        % read in an FPM-taken pic into the array
 
 % convert to greyscale
 gimg = rgb2gray(img);
 
-% next we display the two images side by side. ref: http://www.mathworks.in/help/images/displaying-images-using-the-imshow-function.html
-% subplot(3,2, 1), imshow(img,'Border','tight');   % read above link to find out about subplots and even imshow()
-% subplot(1,2,1), imshow(gimg,'Border','tight');
+% take the fft2
+f = fft2(gimg);
 
-% next we find the fourier transform of the greyscaled image...http://biocomp.cnb.csic.es/~coss/Docencia/ImageProcessing/Tutorial/
-F = fft2(gimg, ford, ford);
-F = fftshift(F);            % shift the center
-% subplot(3,2,[3 6]), imshow(abs(F),[0,dord]); colorbar          % asymmetrical arrangement of subplots is done this way http://matlab.izmiran.ru/help/techdoc/ref/subplot.html
-% subplot(1,2,2), 
-imshow(abs(F),[0,dord]); colorbar 
+% Then we do an "fftshift" to center the fft ... need to do this with and without and see the diff in reality
+f = fftshift(f);
+
+% Next we take the magnitude of the fft
+f = abs(f);
+
+% These are usually really small, we will take the log
+f = log(f + 1)		% 1 is added to prevent log(0) from happening
+
+% Next we normalize between 0 and 1
+f = mat2gray(f)
+
+% Now we're going to display it
+imshow(f)
