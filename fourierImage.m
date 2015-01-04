@@ -26,10 +26,10 @@ f = fftshift(f);
 f = abs(f);
 
 % These are usually really small, we will take the log
-f = log(f + 1)		% 1 is added to prevent log(0) from happening
+f = log(f + 1);		% 1 is added to prevent log(0) from happening
 
 % Next we normalize between 0 and 1
-f = mat2gray(f)
+f = mat2gray(f);
 
 % Now we're going to display it
 imshow(f)
