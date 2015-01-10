@@ -1,6 +1,6 @@
 # This shall display the Fourier transform of an image. Really simple code
 # FIRST al the declarations...
-imageName = "images/cos2.png"
+imageName = "images/eye.jpg"
 
 from scipy import fftpack
 import numpy, Image, pylab
