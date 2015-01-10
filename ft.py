@@ -17,6 +17,8 @@ def rgb2gray(rgb):
 # Now we begin the fun...
 im = Image.open(imageName)
 image = numpy.array(im)		# convert to numpy array
+pylab.figure()
+pylab.imshow(image)
 
 print(image.shape)
 print(image.size)
@@ -27,9 +29,12 @@ if (len(image.shape) == 3):
 
 f = fftpack.fft2(image)		# 2D fft done, just like MATLAB
 
+# this segment just displays the plain old ft..
 f = fftpack.fftshift(f)		# again like MATLAB, shift the origin to the 'center'
-
 psd = numpy.abs(f)
-
+pylab.figure()
 pylab.imshow(numpy.log10(psd + 1))
 pylab.show()
+
+# this section chops out a section and displays the modified file
+
