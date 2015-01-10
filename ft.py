@@ -47,7 +47,7 @@ final_image = numpy.zeros(image.shape)	# empty array for our final image
 
 ## Hear ye hear ye, this is for splitting shit up into RGB components and then performing individual operations on them yo
 # now we split the image into it's red, green and blue arrays
-for i in range(0,2):						# 0 - red, 1 - green, 2 - blue
+for i in range(0, image.shape[2]):				# for some reason if you put range(0,2) it screws the colours up. WHY
   channel = image[:,:,i]					# split out the channel
   f = numpy.fft.fftshift(numpy.fft.fft2(channel))		# find 2D FFT
   # now you can perform some shit on the fourier transform ..
