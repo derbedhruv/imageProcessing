@@ -1,6 +1,6 @@
 # This shall display the Fourier transform of an image. Really simple code
 # FIRST al the declarations...
-imageName = "cos1.png"
+imageName = "images/cos2.png"
 
 from scipy import fftpack
 import numpy, Image, pylab
@@ -21,7 +21,9 @@ image = numpy.array(im)		# convert to numpy array
 print(image.shape)
 print(image.size)
 
-# image = rgb2gray(image)
+if (len(image.shape) == 3):
+  # if it is an RGB image, convert to graysscale yo
+  image = rgb2gray(image)
 
 f = fftpack.fft2(image)		# 2D fft done, just like MATLAB
 
