@@ -1,4 +1,4 @@
-# This shall display the Fourier transform of an image. Really simple code
+# This shall display the Fourier transform of an image. BUT IN COLOUR BITCHES
 # FIRST al the declarations...
 imageName = "images/eye.jpg"
 
@@ -36,7 +36,7 @@ def circular_mask(shape,centre,radius):
     return circmask*anglemask
 
 # Now we begin the fun...
-im = Image.open(imageName).convert("L")		# L makes it greyscale
+im = Image.open(imageName)	# L makes it greyscale
 image = numpy.array(im)		# convert to numpy array
 
 '''
@@ -47,7 +47,7 @@ print(image.shape)
 print(image.size)
 '''
 
-f = numpy.fft.fft2(image)		# 2D fft done, just like MATLAB
+f = numpy.fft.fftshift(numpy.fft.fft2(image))		# 2D fft done, just like MATLAB
 
 # this segment just displays the plain old ft..
 # f = fftpack.fftshift(f)		# again like MATLAB, shift the origin to the 'center'
@@ -63,12 +63,11 @@ mask = circular_mask(image.shape, (image.shape[0]/2, image.shape[1]/2), 600)
 # f[~mask] = 0		# chop out circular section
 psd = numpy.abs(f)
 
-imm = numpy.fft.ifft2(f)
+imm = numpy.fft.ifft2(numpy.fft.fftshift(f))
 image_modi = Image.fromarray(imm.astype(numpy.uint8))	# this is still giving complex values, why?
-print(imm.shape)
 
 pylab.figure()
-pylab.imshow(image_modi, cmap = cm.Greys_r)		# display in greyscale space
+pylab.imshow(image_modi)		# display in colour space
 
 pylab.figure()
 pylab.imshow(numpy.log10(psd+1))
