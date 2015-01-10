@@ -13,7 +13,7 @@ ford = 256;     % fourier order
 dord = 1024;    % display order
 %}
 
-img = imread('images\cos1.png');        % read in an FPM-taken pic into the array
+img = imread('images\cos2.png');        % read in an FPM-taken pic into the array
 
 % convert to greyscale
 if ~(size(img,3) == 1)
