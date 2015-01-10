@@ -55,9 +55,9 @@ for i in range(0, image.shape[2]):				# for some reason if you put range(0,2) it
   # first the center coordinates..
   cx = image.shape[0]/2
   cy = image.shape[1]/2
-  radius = 10
+  radius = 100
 
-  mask = circular_mask(image.shape, (cx, cy), radius)
+  mask = circular_mask(image.shape, (cx - 100, cy), radius)
   f[~mask] = 0						# chop out circular section
   psd = numpy.abs(f)						# could be either, assuming the transforms are hte same for each chan
   
