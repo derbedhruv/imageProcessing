@@ -4,15 +4,6 @@ imageName = "images/eye.jpg"
 
 import numpy, Image, pylab, matplotlib.cm as cm
 
-# There's no inbuilt function in any of these python libraries to convert from rgb to grayscale
-# This one was taken from http://stackoverflow.com/questions/12201577/convert-rgb-image-to-grayscale-in-python
-def rgb2gray(rgb):
-    # obv rgb has to be a numpy array
-    r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
-    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-
-    return gray
-
 # the circular_mask was copied from http://stackoverflow.com/questions/18352973/mask-a-circular-sector-in-a-numpy-array
 def circular_mask(shape,centre,radius):
     """
@@ -45,7 +36,7 @@ def circular_mask(shape,centre,radius):
     return circmask*anglemask
 
 # Now we begin the fun...
-im = Image.open(imageName)
+im = Image.open(imageName).convert("L")		# L makes it greyscale
 image = numpy.array(im)		# convert to numpy array
 
 '''
@@ -55,10 +46,6 @@ pylab.imshow(image)
 print(image.shape)
 print(image.size)
 '''
-
-if (len(image.shape) == 3):
-  # if it is an RGB image, convert to graysscale yo
-  image = rgb2gray(image)
 
 f = numpy.fft.fft2(image)		# 2D fft done, just like MATLAB
 
@@ -77,11 +64,11 @@ mask = circular_mask(image.shape, (image.shape[0]/2, image.shape[1]/2), 600)
 psd = numpy.abs(f)
 
 imm = numpy.fft.ifft2(f)
-image_modi = Image.fromarray(imm.astype(numpy.uint8))
+image_modi = Image.fromarray(imm.astype(numpy.uint8))	# this is still giving complex values, why?
 print(imm.shape)
 
 pylab.figure()
-pylab.imshow(image_modi, cmap = cm.Greys_r)		# not sure if this is correct
+pylab.imshow(image_modi, cmap = cm.Greys_r)		# display in greyscale space
 
 pylab.figure()
 pylab.imshow(numpy.log10(psd+1))
