@@ -13,13 +13,15 @@ ford = 256;     % fourier order
 dord = 1024;    % display order
 %}
 
-img = imread('histology2.jpg');        % read in an FPM-taken pic into the array
+img = imread('images\cos1.png');        % read in an FPM-taken pic into the array
 
 % convert to greyscale
-gimg = rgb2gray(img);
+if ~(size(img,3) == 1)
+  img = rgb2gray(img);
+end
 
 % take the fft2
-f = fft2(gimg);
+f = fft2(img);
 
 % Then we do an "fftshift" to center the fft ... need to do this with and without and see the diff in reality
 f = fftshift(f);
