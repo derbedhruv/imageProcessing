@@ -39,31 +39,17 @@ def circular_mask(shape,centre,radius):
 im = Image.open(imageName).convert("L")		# L makes it greyscale
 image = numpy.array(im)		# convert to numpy array
 
-'''
-pylab.figure()
-pylab.imshow(image)
-
-print(image.shape)
-print(image.size)
-'''
-
-f = numpy.fft.fft2(image)		# 2D fft done, just like MATLAB
+f = numpy.fft.fftshift(numpy.fft.fft2(image))		# 2D fft done, just like MATLAB, also shifted yo
 
 # this segment just displays the plain old ft..
 # f = fftpack.fftshift(f)		# again like MATLAB, shift the origin to the 'center'
 
-'''
-pylab.figure()
-pylab.imshow(numpy.log10(psd+1))
-pylab.show()
-'''
-
 # this section chops out a section and displays the modified file
-mask = circular_mask(image.shape, (image.shape[0]/2, image.shape[1]/2), 600)
-# f[~mask] = 0		# chop out circular section
+mask = circular_mask(image.shape, (f.shape[0]/2, f.shape[1]/2), 600)
+f[~mask] = 0		# chop out circular section
 psd = numpy.abs(f)
 
-imm = numpy.fft.ifft2(f)
+imm = numpy.fft.ifft2(numpy.fft.fftshift(f))
 image_modi = Image.fromarray(imm.astype(numpy.uint8))	# this is still giving complex values, why?
 print(imm.shape)
 
