@@ -2,8 +2,7 @@
 # FIRST al the declarations...
 imageName = "images/eye.jpg"
 
-from scipy import fftpack
-import numpy, Image, pylab
+import numpy, Image, pylab, matplotlib.cm as cm
 
 # There's no inbuilt function in any of these python libraries to convert from rgb to grayscale
 # This one was taken from http://stackoverflow.com/questions/12201577/convert-rgb-image-to-grayscale-in-python
@@ -49,29 +48,41 @@ def circular_mask(shape,centre,radius):
 im = Image.open(imageName)
 image = numpy.array(im)		# convert to numpy array
 
-# circular mask fun
-mask = circular_mask(image.shape, (image.shape[0]/2, image.shape[1]/2), 300)
-image[~mask] = 0
-
+'''
 pylab.figure()
 pylab.imshow(image)
 
 print(image.shape)
 print(image.size)
+'''
 
 if (len(image.shape) == 3):
   # if it is an RGB image, convert to graysscale yo
   image = rgb2gray(image)
 
-f = fftpack.fft2(image)		# 2D fft done, just like MATLAB
+f = numpy.fft.fft2(image)		# 2D fft done, just like MATLAB
 
 # this segment just displays the plain old ft..
-f = fftpack.fftshift(f)		# again like MATLAB, shift the origin to the 'center'
-psd = numpy.abs(f)
+# f = fftpack.fftshift(f)		# again like MATLAB, shift the origin to the 'center'
+
+'''
 pylab.figure()
 pylab.imshow(numpy.log10(psd+1))
 pylab.show()
+'''
 
 # this section chops out a section and displays the modified file
+mask = circular_mask(image.shape, (image.shape[0]/2, image.shape[1]/2), 600)
+# f[~mask] = 0		# chop out circular section
+psd = numpy.abs(f)
 
+imm = numpy.fft.ifft2(f)
+image_modi = Image.fromarray(imm.astype(numpy.uint8))
+print(imm.shape)
 
+pylab.figure()
+pylab.imshow(image_modi, cmap = cm.Greys_r)		# not sure if this is correct
+
+pylab.figure()
+pylab.imshow(numpy.log10(psd+1))
+pylab.show()
