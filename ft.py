@@ -14,9 +14,45 @@ def rgb2gray(rgb):
 
     return gray
 
+# the circular_mask was copied from http://stackoverflow.com/questions/18352973/mask-a-circular-sector-in-a-numpy-array
+def circular_mask(shape,centre,radius):
+    """
+    Return a boolean mask for a circular sector. The start/stop angles in  
+    `angle_range` should be given in clockwise order.
+    """
+    angle_range = [0,360]
+
+    x,y = numpy.ogrid[:shape[0],:shape[1]]
+    cx,cy = centre
+    tmin,tmax = numpy.deg2rad(angle_range)
+
+    # ensure stop angle > start angle
+    if tmax < tmin:
+            tmax += 2*numpy.pi
+
+    # convert cartesian --> polar coordinates
+    r2 = (x-cx)*(x-cx) + (y-cy)*(y-cy)
+    theta = numpy.arctan2(x-cx,y-cy) - tmin
+
+    # wrap angles between 0 and 2*pi
+    theta %= (2*numpy.pi)
+
+    # circular mask
+    circmask = r2 <= radius*radius
+
+    # angular mask
+    anglemask = theta <= (tmax-tmin)
+
+    return circmask*anglemask
+
 # Now we begin the fun...
 im = Image.open(imageName)
 image = numpy.array(im)		# convert to numpy array
+
+# circular mask fun
+mask = circular_mask(image.shape, (image.shape[0]/2, image.shape[1]/2), 300)
+image[~mask] = 0
+
 pylab.figure()
 pylab.imshow(image)
 
@@ -33,8 +69,9 @@ f = fftpack.fft2(image)		# 2D fft done, just like MATLAB
 f = fftpack.fftshift(f)		# again like MATLAB, shift the origin to the 'center'
 psd = numpy.abs(f)
 pylab.figure()
-pylab.imshow(numpy.log10(psd + 1))
+pylab.imshow(numpy.log10(psd+1))
 pylab.show()
 
 # this section chops out a section and displays the modified file
+
 
