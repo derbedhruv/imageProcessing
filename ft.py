@@ -52,8 +52,13 @@ for i in range(0, image.shape[2]):				# for some reason if you put range(0,2) it
   f = numpy.fft.fftshift(numpy.fft.fft2(channel))		# find 2D FFT
   # now you can perform some shit on the fourier transform ..
   # this section chops out a section and displays the modified file
-  mask = circular_mask(image.shape, (image.shape[0]/2, image.shape[1]/2), 600)
-  # f[~mask] = 0						# chop out circular section
+  # first the center coordinates..
+  cx = image.shape[0]/2
+  cy = image.shape[1]/2
+  radius = 10
+
+  mask = circular_mask(image.shape, (cx, cy), radius)
+  f[~mask] = 0						# chop out circular section
   psd = numpy.abs(f)						# could be either, assuming the transforms are hte same for each chan
   
   # now we find the inverses and stitch them together
