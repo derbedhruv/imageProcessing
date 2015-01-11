@@ -47,7 +47,7 @@ f = numpy.fft.fftshift(numpy.fft.fft2(image))		# 2D fft done, just like MATLAB, 
 # this section chops out a section and displays the modified file
 cx = f.shape[0]/2 
 cy = f.shape[1]/2
-mask = circular_mask(image.shape, (cx + 100, cy), 100)
+mask = circular_mask(image.shape, (cx + 50, cy - 50), 100)
 f[~mask] = 0		# chop out circular section
 psd = numpy.abs(f)
 
