@@ -52,8 +52,8 @@ final_image = numpy.zeros(image.shape)	# empty array for our final image
 ### we will generate 6 different images from this one and save them all with names from 00 to 22, by shifting a circular pupil of the FT by 
 ### 50 units back and forth.
 ### enter the number of shifted images desired along each axis...
-xax = 2 
-yax = 1
+xax = 3 
+yax = 3
 
 radius = 100
 cx = image.shape[0]/2
@@ -64,6 +64,9 @@ fshift = 50
 # and it shall be so!
 for m in range(0, xax):
   for n in range(0, yax):
+
+    print('building image ' + str(m) + ',' + str(n) + ' with the FT pupil shifted by ' + str(fshift*(m - abs(xax/2))) + ',' + str(fshift*(n - abs(yax/2))))
+
   ## Hear ye hear ye, this is for splitting shit up into RGB components and then performing individual operations on them yo
   # now we split the image into it's red, green and blue arrays
     for i in range(0, image.shape[2]):				# for some reason if you put range(0,2) it screws the colours up. WHY
