@@ -84,7 +84,7 @@ for m in range(0, xax):
       final_image[:,:,i] = numpy.fft.ifft2(numpy.fft.fftshift(f))
 
     image_modi = Image.fromarray(final_image.astype(numpy.uint8))	# this is still giving complex values, why?
-    image_modi.save('./images/fpm_artificial/' + str(m) + str(n) + '.png')
+    image_modi.save('./images/fpm_artificial/' + str(m) + str(n) + '.jpg')
 
     pylab.figure()
     pylab.imshow(image_modi)		# display in colour space

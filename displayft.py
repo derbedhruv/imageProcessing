@@ -1,6 +1,6 @@
 # This shall display the FT of an image, after converting it to greyscale
 # FIRST al the declarations...
-imageName = "images/fpm_artificial/01.png"
+imageName = "images/fpm_artificial/22.png"
 
 import numpy, Image, pylab, matplotlib.cm as cm
 
