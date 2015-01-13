@@ -67,6 +67,7 @@ pylab.imshow(upsampled_guess_image)
 # upsampled_guess_image.save(folder + 'upsampled' + filetype)
 
 # we find its fourier transform(s) and keep them handy
+# print(upsampled.shape)
 upsampled_ft = numpy.zeros(upsampled.shape)
 for j in range(0, upsampled.shape[2]):
   up_channel = upsampled[:,:,j]
@@ -80,8 +81,8 @@ for j in range(0, upsampled.shape[2]):
 radius = 100
 fshift = 50
 
-xmax = 2
-ymax = 1
+xmax = 0
+ymax = 0
 
 for p in range(0, xmax):
   for q in range(0, ymax):
@@ -108,7 +109,7 @@ for p in range(0, xmax):
        
 # then we take the ifft and build the upsampled image again..
 highres_image = numpy.zeros(upsampled.shape)
-for a in range(0, 3): 
+for a in range(0, upsampled.shape[2]): 
   highres_image[:,:,a] = numpy.fft.ifft2(numpy.fft.fftshift(upsampled_ft[:,:,a])) 
 
 highres_output_image = Image.fromarray(highres_image.astype(numpy.uint8))

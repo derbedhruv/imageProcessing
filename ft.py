@@ -1,6 +1,6 @@
 # This shall display the Fourier transform of an image. BUT IN COLOUR BITCHES
 # FIRST al the declarations...
-imageName = "images/eye.jpg"
+imageName = "images/fpm_artificial/upsampled.jpg"
 
 import numpy, Image, pylab, matplotlib.cm as cm
 
@@ -58,8 +58,8 @@ for i in range(0, image.shape[2]):				# for some reason if you put range(0,2) it
   radius = 100
 
   mask = circular_mask(image.shape, (cx - 100, cy), radius)
-  f[~mask] = 0						# chop out circular section
-  psd = numpy.abs(f)						# could be either, assuming the transforms are hte same for each chan
+  # f[~mask] = 0						# chop out circular section
+  psd = numpy.abs(f)					# could be either, assuming the transforms are hte same for each chan
   
   # now we find the inverses and stitch them together
   final_image[:,:,i] = numpy.fft.ifft2(numpy.fft.fftshift(f))
