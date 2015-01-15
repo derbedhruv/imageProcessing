@@ -6,7 +6,7 @@
 #	00  10  20
 #
 # Where each step indicates a step in 50 in the fourier domain. Remember that 11 is the actual (0,0).
-import numpy, pylab, Image, scipy.misc
+import numpy, pylab, Image, scipy.misc, matplotlib.cm as cm
 
 # the circular_mask was copied from http://stackoverflow.com/questions/18352973/mask-a-circular-sector-in-a-numpy-array
 def circular_mask(shape,centre,radius):
@@ -43,21 +43,25 @@ def circular_mask(shape,centre,radius):
 #### So we'll start by upsampling the one we know is the 'central' one, i.e. who's FT circular mask is in the center
 ####
 folder = "./images/fpm_artificial/"	# the folder where the files of the name given above lie..
-filetype = ".png"
-filename = "test_image_fpm"
+filetype = ".jpg"
+filename = "00"
 
+print("reading image into array...")
 central_image = Image.open(folder + filename + filetype)
 ncentral = numpy.array(central_image)
 
+print("finished. now will be upsampling the guess image...")
+
 # now the actual upsampling..2 times the size
 upsampled = scipy.misc.imresize(ncentral, (3072, 4096))
+
+print("upsampling completed. Now will save it and then find the FT")
 
 '''
 upsampled_guess_image = Image.fromarray(upsampled)
 pylab.figure()
 pylab.imshow(upsampled_guess_image)
 '''
-
 # and we save it
 # upsampled_guess_image.save(folder + 'upsampled' + filetype)
 
@@ -73,6 +77,8 @@ if (image_dimensions == 3):
 else:
   upsampled_ft = numpy.fft.fft2(upsampled)
 
+print("FT of the upsampled image calculated and kept aside. Now will start adding the FTs of the lowres images one by one")
+
 # pylab.show()
 
 #### C'est l'heure.
@@ -81,12 +87,13 @@ else:
 radius = 100
 fshift = 50
 
-xmax = 0
-ymax = 0
+xmax = 3
+ymax = 3
 
 for p in range(0, xmax):
   for q in range(0, ymax):
      # open figure
+     print("adding figure " + str(p) + "," + str(q) + "...")
      im = Image.open(folder + str(p) + str(q) + filetype)
      image = numpy.array(im)
      
@@ -96,19 +103,24 @@ for p in range(0, xmax):
      # first we create the central mask that will extract the center of the shifted fft of the image
      center_circle = circular_mask(image.shape, (cx, cy), radius )
      
-     # then the shifted circular pupil based on (p,q)
-     shifted_circle = circular_mask(image.shape, (((upsampled.shape[0]/2)) + fshift*(p - abs(xmax/2)), (upsampled.shape[1]/2) + fshift*(q - abs(ymax/2))), radius)
+     # then the shifted circular pupil based on (p,q). Remember this will be applied to the higher res image
+     shifted_circle = circular_mask(upsampled.shape, (((upsampled.shape[0]/2)) + fshift*(p - abs(xmax/2)), (upsampled.shape[1]/2) + fshift*(q - abs(ymax/2))), radius)
      
-     for i in range(0, 3):
-       channel = image[:,:,i]
-       image_ft = numpy.fft.fftshift(numpy.fft.fft2(channel))
+     # for i in range(0, 3):
+     # channel = image[:,:,i]
+     # image_ft = numpy.fft.fftshift(numpy.fft.fft2(channel))
+     image_ft = numpy.fft.fftshift(numpy.fft.fft2(image))
        
-       # the magic sauce: replacing the circular chunk of the upsampled image's FT with that from the lowres image
-       # upsampled_ft[:,:,i][shifted_circle] = image_ft[center_circle]     
+     # the magic sauce: replacing the circular chunk of the upsampled image's FT with that from the lowres image
+     # upsampled_ft[:,:,i][shifted_circle] = image_ft[center_circle]     
+     upsampled_ft[shifted_circle] = image_ft[center_circle]     
+     print("done!")
        
 # then we take the ifft and build the upsampled image again..
 highres_image = numpy.zeros(upsampled.shape)
 # highres_image[:,:,a] = numpy.fft.ifft2(numpy.fft.fftshift(upsampled_ft[:,:,a])) 
+
+print("last step, finding the ifft of the image and displaying..")
 
 if (image_dimensions == 3):
   highres_image[:,:,0] = numpy.fft.ifft2(upsampled_ft_r)
@@ -122,5 +134,5 @@ highres_output_image = Image.fromarray(highres_image.astype(numpy.uint8))
 # highres_output_image.save(folder + 'highresoutput_weird' + filetype)
 
 pylab.figure()
-pylab.imshow(highres_output_image)
+pylab.imshow(highres_output_image, cmap=cm.Greys_r)
 pylab.show()
