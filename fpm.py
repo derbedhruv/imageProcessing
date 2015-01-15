@@ -131,7 +131,7 @@ else:
 
 highres_output_image = Image.fromarray(highres_image.astype(numpy.uint8))
 # highres_output_image = Image.fromarray(abs(highres_image))
-# highres_output_image.save(folder + 'highresoutput_weird' + filetype)
+highres_output_image.save(folder + 'highresoutput' + filetype)
 
 pylab.figure()
 pylab.imshow(highres_output_image, cmap=cm.Greys_r)
