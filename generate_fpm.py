@@ -1,7 +1,7 @@
 # This shall generate the "artificial fpm" files from the eye.jpg image, and save them accordingly. 
 # These will then be analyzed later and then stitched together to get a higher res image
 # FIRST al the declarations...
-imageName = "images/eye.jpg"
+imageName = "images/test_fpm.png"
 
 import numpy, Image, pylab, matplotlib.cm as cm
 
@@ -69,27 +69,40 @@ for m in range(0, xax):
 
   ## Hear ye hear ye, this is for splitting shit up into RGB components and then performing individual operations on them yo
   # now we split the image into it's red, green and blue arrays
-    for i in range(0, image.shape[2]):				# for some reason if you put range(0,2) it screws the colours up. WHY
-      channel = image[:,:,i]					# split out the channel
-      f = numpy.fft.fftshift(numpy.fft.fft2(channel))		# find 2D FFT
+
+  # for i in range(0, image_matrix_dimension):				# for some reason if you put range(0,2) it screws the colours up. WHY
+      # channel = image[:,:,i]					# split out the channel
+      # f = numpy.fft.fftshift(numpy.fft.fft2(channel))		# find 2D FFT
+    print("starting taking fft")
+    f = numpy.fft.fftshift(numpy.fft.fft2(image))		# find 2D FFT
+    print("finished fft, now makign mask")
       # now you can perform some shit on the fourier transform ..
       # this section chops out a section and displays the modified file
       # first the center coordinates..
 
-      mask = circular_mask(image.shape, (cx + fshift*(m - abs(xax/2)), cy + fshift*(n - abs(yax/2))), radius)
-      f[~mask] = 0					# chop out circular section
-      psd = numpy.abs(f)					# could be either, assuming the transforms are hte same for each chan
+   
+    mask = circular_mask(image.shape, (cx + fshift*(m - abs(xax/2)), cy + fshift*(n - abs(yax/2))), radius)
+    print("made mask. now applying")
+    f[~mask] = 0					# chop out circular section
+    print("applied.")
+    psd = numpy.abs(f)					# could be either, assuming the transforms are hte same for each chan
   
       # now we find the inverses and stitch them together
-      final_image[:,:,i] = numpy.fft.ifft2(numpy.fft.fftshift(f))
+      # final_image[:,:,i] = numpy.fft.ifft2(numpy.fft.fftshift(f))
+    print("generating final image")
+    final_image = numpy.fft.ifft2(numpy.fft.fftshift(f))
+    print("now making into uint8 image object")
 
     image_modi = Image.fromarray(final_image.astype(numpy.uint8))	# this is still giving complex values, why?
+    print("saving...")
     image_modi.save('./images/fpm_artificial/' + str(m) + str(n) + '.jpg')
 
     pylab.figure()
     pylab.imshow(image_modi)		# display in colour space
 
-  pylab.figure()
-  pylab.imshow(numpy.log10(psd+1))
+    pylab.figure()
+    pylab.imshow(numpy.log10(psd+1))
+
+    pylab.show()
 
 # pylab.show()
