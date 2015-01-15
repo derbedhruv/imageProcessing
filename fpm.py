@@ -43,9 +43,10 @@ def circular_mask(shape,centre,radius):
 #### So we'll start by upsampling the one we know is the 'central' one, i.e. who's FT circular mask is in the center
 ####
 folder = "./images/fpm_artificial/"	# the folder where the files of the name given above lie..
-filetype = ".jpg"
+filetype = ".png"
+filename = "test_image_fpm"
 
-central_image = Image.open(folder + '00' + filetype)
+central_image = Image.open(folder + filename + filetype)
 ncentral = numpy.array(central_image)
 
 # now the actual upsampling..2 times the size
@@ -61,12 +62,16 @@ pylab.imshow(upsampled_guess_image)
 # upsampled_guess_image.save(folder + 'upsampled' + filetype)
 
 # we find its fourier transform(s) and keep them handy
-# print(upsampled.shape)
+image_dimensions = len(upsampled.shape)
 # upsampled_ft = numpy.zeros(upsampled.shape)
 # upsampled_ft[:,:,j] = numpy.fft.fftshift(numpy.fft.fft2(up_channel))
-upsampled_ft_r= numpy.fft.fft2(upsampled[:,:,0])
-upsampled_ft_g= numpy.fft.fft2(upsampled[:,:,1])
-upsampled_ft_b= numpy.fft.fft2(upsampled[:,:,2])
+
+if (image_dimensions == 3):
+  upsampled_ft_r= numpy.fft.fft2(upsampled[:,:,0])
+  upsampled_ft_g= numpy.fft.fft2(upsampled[:,:,1])
+  upsampled_ft_b= numpy.fft.fft2(upsampled[:,:,2])
+else:
+  upsampled_ft = numpy.fft.fft2(upsampled)
 
 # pylab.show()
 
@@ -104,9 +109,13 @@ for p in range(0, xmax):
 # then we take the ifft and build the upsampled image again..
 highres_image = numpy.zeros(upsampled.shape)
 # highres_image[:,:,a] = numpy.fft.ifft2(numpy.fft.fftshift(upsampled_ft[:,:,a])) 
-highres_image[:,:,0] = numpy.fft.ifft2(upsampled_ft_r)
-highres_image[:,:,1] = numpy.fft.ifft2(upsampled_ft_g)
-highres_image[:,:,2] = numpy.fft.ifft2(upsampled_ft_b)
+
+if (image_dimensions == 3):
+  highres_image[:,:,0] = numpy.fft.ifft2(upsampled_ft_r)
+  highres_image[:,:,1] = numpy.fft.ifft2(upsampled_ft_g)
+  highres_image[:,:,2] = numpy.fft.ifft2(upsampled_ft_b)
+else:
+  highres_image = numpy.fft.ifft2(upsampled_ft)
 
 highres_output_image = Image.fromarray(highres_image.astype(numpy.uint8))
 # highres_output_image = Image.fromarray(abs(highres_image))
