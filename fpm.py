@@ -62,11 +62,11 @@ pylab.imshow(upsampled_guess_image)
 
 # we find its fourier transform(s) and keep them handy
 # print(upsampled.shape)
-upsampled_ft = numpy.zeros(upsampled.shape)
-for j in range(0, upsampled.shape[2]):
-  up_channel = upsampled[:,:,j]
-  # upsampled_ft[:,:,j] = numpy.fft.fftshift(numpy.fft.fft2(up_channel))
-  upsampled_ft[:,:,j] = numpy.fft.fft2(up_channel)
+# upsampled_ft = numpy.zeros(upsampled.shape)
+# upsampled_ft[:,:,j] = numpy.fft.fftshift(numpy.fft.fft2(up_channel))
+upsampled_ft_r= numpy.fft.fft2(upsampled[:,:,0])
+upsampled_ft_g= numpy.fft.fft2(upsampled[:,:,1])
+upsampled_ft_b= numpy.fft.fft2(upsampled[:,:,2])
 
 # pylab.show()
 
@@ -103,13 +103,14 @@ for p in range(0, xmax):
        
 # then we take the ifft and build the upsampled image again..
 highres_image = numpy.zeros(upsampled.shape)
-for a in range(0, upsampled.shape[2]): 
-  # highres_image[:,:,a] = numpy.fft.ifft2(numpy.fft.fftshift(upsampled_ft[:,:,a])) 
-  highres_image[:,:,a] = numpy.fft.ifft2(upsampled_ft[:,:,a])
+# highres_image[:,:,a] = numpy.fft.ifft2(numpy.fft.fftshift(upsampled_ft[:,:,a])) 
+highres_image[:,:,0] = numpy.fft.ifft2(upsampled_ft_r)
+highres_image[:,:,1] = numpy.fft.ifft2(upsampled_ft_g)
+highres_image[:,:,2] = numpy.fft.ifft2(upsampled_ft_b)
 
 highres_output_image = Image.fromarray(highres_image.astype(numpy.uint8))
 # highres_output_image = Image.fromarray(abs(highres_image))
-highres_output_image.save(folder + 'highresoutput_weird' + filetype)
+# highres_output_image.save(folder + 'highresoutput_weird' + filetype)
 
 pylab.figure()
 pylab.imshow(highres_output_image)
