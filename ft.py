@@ -45,11 +45,14 @@ pylab.imshow(im)
 image = numpy.array(im)		# convert to numpy array
 final_image = numpy.zeros(image.shape)	# empty array for our final image
 
+image_ft = numpy.zeros(image.shape)
+
 ## Hear ye hear ye, this is for splitting shit up into RGB components and then performing individual operations on them yo
 # now we split the image into it's red, green and blue arrays
 for i in range(0, image.shape[2]):				# for some reason if you put range(0,2) it screws the colours up. WHY
   channel = image[:,:,i]					# split out the channel
   f = numpy.fft.fftshift(numpy.fft.fft2(channel))		# find 2D FFT
+  # print(image_ft.shape)
   # now you can perform some shit on the fourier transform ..
   # this section chops out a section and displays the modified file
   # first the center coordinates..
@@ -59,10 +62,12 @@ for i in range(0, image.shape[2]):				# for some reason if you put range(0,2) it
 
   mask = circular_mask(image.shape, (cx - 100, cy), radius)
   # f[~mask] = 0						# chop out circular section
-  psd = numpy.abs(f)					# could be either, assuming the transforms are hte same for each chan
+  # psd = numpy.abs(f)					# could be either, assuming the transforms are hte same for each chan
   
   # now we find the inverses and stitch them together
   final_image[:,:,i] = numpy.fft.ifft2(numpy.fft.fftshift(f))
+
+print(final_image.dtype)
 
 image_modi = Image.fromarray(final_image.astype(numpy.uint8))	# this is still giving complex values, why?
 

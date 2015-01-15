@@ -48,18 +48,12 @@ filetype = ".jpg"
 central_image = Image.open(folder + '00' + filetype)
 ncentral = numpy.array(central_image)
 
-'''
-pylab.figure
-pylab.imshow(central_image)
-'''
-
 # now the actual upsampling..2 times the size
 upsampled = scipy.misc.imresize(ncentral, (3072, 4096))
-upsampled_guess_image = Image.fromarray(upsampled)
 
 '''
-# and we show it
-pylab.figure
+upsampled_guess_image = Image.fromarray(upsampled)
+pylab.figure()
 pylab.imshow(upsampled_guess_image)
 '''
 
@@ -71,7 +65,8 @@ pylab.imshow(upsampled_guess_image)
 upsampled_ft = numpy.zeros(upsampled.shape)
 for j in range(0, upsampled.shape[2]):
   up_channel = upsampled[:,:,j]
-  upsampled_ft[:,:,j] = numpy.fft.fftshift(numpy.fft.fft2(up_channel))
+  # upsampled_ft[:,:,j] = numpy.fft.fftshift(numpy.fft.fft2(up_channel))
+  upsampled_ft[:,:,j] = numpy.fft.fft2(up_channel)
 
 # pylab.show()
 
@@ -99,20 +94,22 @@ for p in range(0, xmax):
      # then the shifted circular pupil based on (p,q)
      shifted_circle = circular_mask(image.shape, (((upsampled.shape[0]/2)) + fshift*(p - abs(xmax/2)), (upsampled.shape[1]/2) + fshift*(q - abs(ymax/2))), radius)
      
-     for i in range(0, image.shape[2]):
+     for i in range(0, 3):
        channel = image[:,:,i]
-       f = numpy.fft.fftshift(numpy.fft.fft2(channel))
+       image_ft = numpy.fft.fftshift(numpy.fft.fft2(channel))
        
        # the magic sauce: replacing the circular chunk of the upsampled image's FT with that from the lowres image
-       # upsampled_ft[:,:,i][shifted_circle] = f[center_circle]
-       
+       # upsampled_ft[:,:,i][shifted_circle] = image_ft[center_circle]     
        
 # then we take the ifft and build the upsampled image again..
 highres_image = numpy.zeros(upsampled.shape)
 for a in range(0, upsampled.shape[2]): 
-  highres_image[:,:,a] = numpy.fft.ifft2(numpy.fft.fftshift(upsampled_ft[:,:,a])) 
+  # highres_image[:,:,a] = numpy.fft.ifft2(numpy.fft.fftshift(upsampled_ft[:,:,a])) 
+  highres_image[:,:,a] = numpy.fft.ifft2(upsampled_ft[:,:,a])
 
 highres_output_image = Image.fromarray(highres_image.astype(numpy.uint8))
+# highres_output_image = Image.fromarray(abs(highres_image))
+highres_output_image.save(folder + 'highresoutput_weird' + filetype)
 
 pylab.figure()
 pylab.imshow(highres_output_image)
