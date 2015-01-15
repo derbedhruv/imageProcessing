@@ -103,6 +103,4 @@ for m in range(0, xax):
     pylab.figure()
     pylab.imshow(numpy.log10(psd+1))
 
-    pylab.show()
-
 # pylab.show()
