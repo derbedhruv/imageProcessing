@@ -55,11 +55,11 @@ final_image = numpy.zeros(image.shape)	# empty array for our final image
 xax = 3 
 yax = 3
 
-radius = 100
+radius = 500
 cx = image.shape[0]/2
 cy = image.shape[1]/2
 
-fshift = 50
+fshift = 250
 
 # and it shall be so!
 for m in range(0, xax):
@@ -97,10 +97,11 @@ for m in range(0, xax):
     print("saving...")
     image_modi.save('./images/fpm_artificial/' + str(m) + str(n) + '.jpg')
 
+    '''
     pylab.figure()
     pylab.imshow(image_modi)		# display in colour space
 
     pylab.figure()
     pylab.imshow(numpy.log10(psd+1))
-
+    '''
 # pylab.show()
