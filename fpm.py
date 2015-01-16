@@ -57,11 +57,10 @@ upsampled = scipy.misc.imresize(ncentral, (3072, 4096))
 
 print("upsampling completed. Now will save it and then find the FT")
 
-'''
 upsampled_guess_image = Image.fromarray(upsampled)
+
 pylab.figure()
-pylab.imshow(upsampled_guess_image)
-'''
+pylab.imshow(upsampled_guess_image, cmap=cm.Greys_r)
 # and we save it
 # upsampled_guess_image.save(folder + 'upsampled' + filetype)
 
@@ -79,6 +78,10 @@ else:
 
 print("FT of the upsampled image calculated and kept aside. Now will start adding the FTs of the lowres images one by one")
 
+'''
+pylab.figure()
+pylab.imshow(numpy.log10(numpy.abs(upsampled_ft)+1))
+'''
 # pylab.show()
 
 #### C'est l'heure.
@@ -93,7 +96,7 @@ ymax = 3
 for p in range(0, xmax):
   for q in range(0, ymax):
      # open figure
-     print("adding figure " + str(p) + "," + str(q) + "...")
+     print("stitching figure " + str(p) + "," + str(q) + "...")
      im = Image.open(folder + str(p) + str(q) + filetype)
      image = numpy.array(im)
      
@@ -101,7 +104,7 @@ for p in range(0, xmax):
      cy = image.shape[1]/2
      
      # first we create the central mask that will extract the center of the shifted fft of the image
-     center_circle = circular_mask(image.shape, (cx, cy), radius )
+     shifted_circle_lowres = circular_mask(image.shape, (((upsampled.shape[0]/2)) + fshift*(p - abs(xmax/2)), (upsampled.shape[1]/2) + fshift*(q - abs(ymax/2))), radius )
      
      # then the shifted circular pupil based on (p,q). Remember this will be applied to the higher res image
      shifted_circle = circular_mask(upsampled.shape, (((upsampled.shape[0]/2)) + fshift*(p - abs(xmax/2)), (upsampled.shape[1]/2) + fshift*(q - abs(ymax/2))), radius)
@@ -113,7 +116,7 @@ for p in range(0, xmax):
        
      # the magic sauce: replacing the circular chunk of the upsampled image's FT with that from the lowres image
      # upsampled_ft[:,:,i][shifted_circle] = image_ft[center_circle]     
-     upsampled_ft[shifted_circle] = image_ft[center_circle]     
+     upsampled_ft[shifted_circle] = image_ft[shifted_circle_lowres]     
      print("done!")
        
 # then we take the ifft and build the upsampled image again..
@@ -132,7 +135,10 @@ else:
 highres_output_image = Image.fromarray(highres_image.astype(numpy.uint8))
 # highres_output_image = Image.fromarray(abs(highres_image))
 highres_output_image.save(folder + 'highresoutput' + filetype)
-
+'''
+pylab.figure()
+pylab.imshow(numpy.log10(numpy.abs(upsampled_ft)+1))
+'''
 pylab.figure()
 pylab.imshow(highres_output_image, cmap=cm.Greys_r)
 pylab.show()
