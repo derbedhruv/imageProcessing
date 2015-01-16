@@ -89,8 +89,8 @@ pylab.imshow(numpy.log10(numpy.abs(upsampled_ft)+1))
 #### C'est l'heure.
 ## First we create 2 masks. One which will be a standard central circular mask and the other with variable center, corresponding to 
 ## the particular picture.
-radius = 100
-fshift = 50
+radius = 500
+fshift = 250
 
 xmax = 3
 ymax = 3
@@ -106,7 +106,7 @@ for p in range(0, xmax):
      cy = image.shape[1]/2
      
      # first we create the central mask that will extract the center of the shifted fft of the image
-     shifted_circle_lowres = circular_mask(image.shape, (((upsampled.shape[0]/2)) + fshift*(p - abs(xmax/2)), (upsampled.shape[1]/2) + fshift*(q - abs(ymax/2))), radius )
+     shifted_circle_lowres = circular_mask(image.shape, (((image.shape[0]/2)) + fshift*(p - abs(xmax/2)), (image.shape[1]/2) + fshift*(q - abs(ymax/2))), radius )
      
      # then the shifted circular pupil based on (p,q). Remember this will be applied to the higher res image
      shifted_circle = circular_mask(upsampled.shape, (((upsampled.shape[0]/2)) + fshift*(p - abs(xmax/2)), (upsampled.shape[1]/2) + fshift*(q - abs(ymax/2))), radius)
