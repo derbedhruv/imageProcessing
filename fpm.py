@@ -59,8 +59,10 @@ print("upsampling completed. Now will save it and then find the FT")
 
 upsampled_guess_image = Image.fromarray(upsampled)
 
+'''
 pylab.figure()
 pylab.imshow(upsampled_guess_image, cmap=cm.Greys_r)
+'''
 # and we save it
 # upsampled_guess_image.save(folder + 'upsampled' + filetype)
 
@@ -135,10 +137,13 @@ else:
 highres_output_image = Image.fromarray(highres_image.astype(numpy.uint8))
 # highres_output_image = Image.fromarray(abs(highres_image))
 highres_output_image.save(folder + 'highresoutput' + filetype)
+
+print("The high res output image has been saved at " + folder + 'highresoutput' + filetype)
 '''
 pylab.figure()
 pylab.imshow(numpy.log10(numpy.abs(upsampled_ft)+1))
-'''
+
 pylab.figure()
 pylab.imshow(highres_output_image, cmap=cm.Greys_r)
 pylab.show()
+'''
