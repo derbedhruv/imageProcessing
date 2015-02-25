@@ -1,5 +1,5 @@
 ##
-# Fourier Ptychographic Microscopy Imaging of known samples for increased resolution.
+# Fourier Ptychographic Microscopy Imaging of known samples for increased resolution and FOV
 #
 # Author: Dhruv Joshi
 #
@@ -29,6 +29,10 @@
 # Each LED's center is 7.62mm away from the next
 # The distance between the LED array and the transparency is 78 mm.
 #   
+# The camera used for imaging was a Jenoptik ProgRes C3, with 416x308 pixel resolution of images taken. Pixel dimensions are 3.45 micron^2 
+# The sensor size is 7.58 mm x 6.54 mm, and the max resolution attainable is 2080 x 1542 pixels 
+#   
+
 ###### importing required modules
 import numpy, pylab, Image, scipy.misc, matplotlib.cm as cm
 
@@ -46,6 +50,7 @@ n = 8			# single dimension of the (square) LED array.
 
 ### definitions which derive from these universal definitions..
 led_array = numpy.empty([n,n], dtype=object)	# 'object' because we will be making a 2d array of tuples
+wave_number = 2*pi/lmbda
 
 
 ## Now the math part. THis will relate a displacement of (x,y) in the LED aray plane to a shift (kx, ky) in the fourier domain. The 
