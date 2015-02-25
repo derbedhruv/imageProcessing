@@ -38,6 +38,7 @@ import numpy, pylab, Image, scipy.misc, matplotlib.cm as cm
 
 
 ###### UNIVERSAL DEFINITIONS
+## Experimental setup constants
 NA = 0.06		# numerical aperture of objective
 d = 7.62		# distance between LED centers in mm
 l = 78			# distance from transparency to the LED array in mm
@@ -45,13 +46,21 @@ x = 3.58		# distance in x-axis from top left of LED array to first LED's center
 y = 3.58		# distance in y-axis from top left of LED array to first LED's center
 origin = [26.44, 20.82]	# the origin w.r.t. the top left of the LED array (as seen from +ve z-axis
 lmbda = 623		# dominant wavelength of the monochromatic light source, in nm
-pi = 3.141592		# apple pie
 n = 8			# single dimension of the (square) LED array.
 
-### definitions which derive from these universal definitions..
+## mathematical constants
+pi = 3.141592		# apple pie
+
+## System constants
+reading_folder = "./images/"	# the folder where the files of the name given above lie..
+saving_folder = "./images/fpm/"	# the folder where we'll save the various iterations of the images and their FTs to
+filetype = ".jpg"
+filename = "00"		# the chosen file to be the upsampled guess image, or starting point 
+
+## definitions which derive from these universal definitions..
 led_array = numpy.empty([n,n], dtype=object)	# 'object' because we will be making a 2d array of tuples
 wave_number = 2*pi/lmbda
-
+upsampling_scaling_factor = 2
 
 ## Now the math part. THis will relate a displacement of (x,y) in the LED aray plane to a shift (kx, ky) in the fourier domain. The 
 # mask for this shift will be a circle in fourier space with a radius of 2*pi*NA/lambda 
@@ -105,108 +114,26 @@ def circular_mask(shape,centre,radius):
 
 #### So we'll start by upsampling the one we know is the 'central' one, i.e. who's FT circular mask is in the center
 ####
-folder = "./images/fpm_artificial/"	# the folder where the files of the name given above lie..
-filetype = ".jpg"
-filename = "00"
 
-print("reading image into array...")
-central_image = Image.open(folder + filename + filetype)
+print("STEP 1: Starting with guess image...")
+central_image = Image.open(reading_folder + filename + filetype).convert("L")
 ncentral = numpy.array(central_image)
 
-print("finished. now will be upsampling the guess image...")
+print("upsampling the guess image...")
 
-# now the actual upsampling..2 times the size
-upsampled = scipy.misc.imresize(ncentral, (3072, 4096))
-
-print("upsampling completed. Now will save it and then find the FT")
-
+# now the actual upsampling..
+upsampled = scipy.misc.imresize(ncentral, (upsampling_scaling_factor*ncentral.shape[0], upsampling_scaling_factor*ncentral.shape[1]))
 upsampled_guess_image = Image.fromarray(upsampled)
+# pylab.figure(); pylab.imshow(upsampled_guess_image, cmap=cm.Greys_r); pylab.show()
 
-'''
-pylab.figure()
-pylab.imshow(upsampled_guess_image, cmap=cm.Greys_r)
-'''
 # and we save it
-# upsampled_guess_image.save(folder + 'upsampled' + filetype)
+upsampled_guess_image.save(saving_folder + 'starting_guess' + filetype)
 
-# we find its fourier transform(s) and keep them handy
-image_dimensions = len(upsampled.shape)
-# upsampled_ft = numpy.zeros(upsampled.shape)
-# upsampled_ft[:,:,j] = numpy.fft.fftshift(numpy.fft.fft2(up_channel))
+# we find its fourier transform and keep it handy
+starting_ft = 20*numpy.log(numpy.abs(numpy.fft.fftshift(numpy.fft.fft2(up_channel))))
+starting_ft_image = Image.fromarray(starting_ft.astype(numpy.uint8))
+starting_ft_image.save(saving_folder + 'starting_guess_ft' + filetype)
 
-if (image_dimensions == 3):
-  upsampled_ft_r= numpy.fft.fft2(upsampled[:,:,0])
-  upsampled_ft_g= numpy.fft.fft2(upsampled[:,:,1])
-  upsampled_ft_b= numpy.fft.fft2(upsampled[:,:,2])
-else:
-  upsampled_ft = numpy.fft.fft2(upsampled)
-
-print("FT of the upsampled image calculated and kept aside. Now will start adding the FTs of the lowres images one by one")
-
-'''
-pylab.figure()
-pylab.imshow(numpy.log10(numpy.abs(upsampled_ft)+1))
-'''
-# pylab.show()
+print("FT of the upsampled image calculated and saved. Now begins the stitching process.")
 
 #### C'est l'heure.
-## First we create 2 masks. One which will be a standard central circular mask and the other with variable center, corresponding to 
-## the particular picture.
-radius = 500
-fshift = 250
-
-xmax = 3
-ymax = 3
-
-for p in range(0, xmax):
-  for q in range(0, ymax):
-     # open figure
-     print("stitching figure " + str(p) + "," + str(q) + "...")
-     im = Image.open(folder + str(p) + str(q) + filetype)
-     image = numpy.array(im)
-     
-     cx = image.shape[0]/2
-     cy = image.shape[1]/2
-     
-     # first we create the central mask that will extract the center of the shifted fft of the image
-     shifted_circle_lowres = circular_mask(image.shape, (((image.shape[0]/2)) + fshift*(p - abs(xmax/2)), (image.shape[1]/2) + fshift*(q - abs(ymax/2))), radius )
-     
-     # then the shifted circular pupil based on (p,q). Remember this will be applied to the higher res image
-     shifted_circle = circular_mask(upsampled.shape, (((upsampled.shape[0]/2)) + fshift*(p - abs(xmax/2)), (upsampled.shape[1]/2) + fshift*(q - abs(ymax/2))), radius)
-     
-     # for i in range(0, 3):
-     # channel = image[:,:,i]
-     # image_ft = numpy.fft.fftshift(numpy.fft.fft2(channel))
-     image_ft = numpy.fft.fftshift(numpy.fft.fft2(image))
-       
-     # the magic sauce: replacing the circular chunk of the upsampled image's FT with that from the lowres image
-     # upsampled_ft[:,:,i][shifted_circle] = image_ft[center_circle]     
-     upsampled_ft[shifted_circle] = image_ft[shifted_circle_lowres]     
-     print("done!")
-       
-# then we take the ifft and build the upsampled image again..
-highres_image = numpy.zeros(upsampled.shape)
-# highres_image[:,:,a] = numpy.fft.ifft2(numpy.fft.fftshift(upsampled_ft[:,:,a])) 
-
-print("last step, finding the ifft of the image and displaying..")
-
-if (image_dimensions == 3):
-  highres_image[:,:,0] = numpy.fft.ifft2(upsampled_ft_r)
-  highres_image[:,:,1] = numpy.fft.ifft2(upsampled_ft_g)
-  highres_image[:,:,2] = numpy.fft.ifft2(upsampled_ft_b)
-else:
-  highres_image = numpy.fft.ifft2(upsampled_ft)
-
-highres_output_image = Image.fromarray(highres_image.astype(numpy.uint8))
-# highres_output_image = Image.fromarray(abs(highres_image))
-highres_output_image.save(folder + 'highresoutput' + filetype)
-
-print("The high res output image has been saved at " + folder + 'highresoutput' + filetype)
-'''
-pylab.figure()
-pylab.imshow(numpy.log10(numpy.abs(upsampled_ft)+1))
-
-pylab.figure()
-pylab.imshow(highres_output_image, cmap=cm.Greys_r)
-pylab.show()
-'''
