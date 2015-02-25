@@ -3,7 +3,9 @@
 #
 # Author: Dhruv Joshi
 #
+#
 # THis file shall stitch together the small images in the fourier domain and produce a higher res image
+# This is based on work reported by Zheng et al in Nature Photonics 7.9 (2013), 739-745
 # 
 # Images were taken on an Olympus BX51 fluorescence microscope with a 2X Plan N achromat wide angle wide FOV lens with NA of 0.06
 # This is a small NA and I am not sure if this is the NA of the entire optical system. This will have to be researched. 
@@ -40,12 +42,28 @@ y = 3.58		# distance in y-axis from top left of LED array to first LED's center
 origin = [26.44, 20.82]	# the origin w.r.t. the top left of the LED array (as seen from +ve z-axis
 lmbda = 623		# dominant wavelength of the monochromatic light source, in nm
 pi = 3.141592		# apple pie
+n = 8			# single dimension of the (square) LED array.
+
+### definitions which derive from these universal definitions..
+led_array = numpy.empty([n,n], dtype=object)	# 'object' because we will be making a 2d array of tuples
+
 
 ## Now the math part. THis will relate a displacement of (x,y) in the LED aray plane to a shift (kx, ky) in the fourier domain. The 
 # mask for this shift will be a circle in fourier space with a radius of 2*pi*NA/lambda 
 # first we have a for loop which generates the precise positions of the LEDs in an array
-led_array = numpy.empty([8,8], dtype=float)
+for i in range(0,n):
+  for j in range(0,n):
+    led_array[i][j] = [round(x + d*i - origin[0], 2), round(y + d*j - origin[1], 2)]	# tuple of (x,y) from origin in mm
 
+## Next we assume that the authors are completely correct in their assumption that the shift in the fourier domain shall be
+# precisely (kx, ky), where these correpond to the wavevectors of each LED source.
+# The wavevector has ampitude equal to the wavenumber in each cartesian axis
+# The wavevector (kx, ky, kz) has a direction given by a unit vector from the light source to the point of illumination on the sample - this
+# will be taken as the origin in 3D cartesian coordinates in this frame of reference.
+#
+# The wavevector for the LED at (a,b,-l) is (-l is fixed since the LED array lies in the z=-l plane
+# (a, b, -l)*(2*pi/{lambda*sqrt(a^2 + b^2 + l^2)}). 
+# Simple enough relationship.
 
 
 # the circular_mask was copied from http://stackoverflow.com/questions/18352973/mask-a-circular-sector-in-a-numpy-array
