@@ -64,6 +64,7 @@ reading_folder = "./images/"	# the folder where the files of the name given abov
 saving_folder = "./images/fpm/"	# the folder where we'll save the various iterations of the images and their FTs to
 filetype = ".jpg"
 filename = "00"		# the chosen file to be the upsampled guess image, or starting point 
+number_iterations = 1	# no of times we will iterate the FPM reconstruction algo
 
 ## definitions which derive from these universal definitions..
 led_array = numpy.empty([n,n], dtype=object)	# 'object' because we will be making a 2d array of tuples
@@ -146,14 +147,19 @@ print("FT of the upsampled image calculated and saved. Now begins the stitching 
 # The mask for this shift will be a circle in fourier space with a radius of 2*pi*NA/lambda 
 # first we have a for loop which loops over all the LEDs in the array
 
-for i in range(0,n):	# x-direction
-  for j in range(0,n):	# y-direction
-    # start by checking whether a particular illumination (LED) file exists, if not move on
-    if (os.path.isfile(reading_folder + str(i) + str(j) + filetype):
-      # Now we can move on
-      led_array[i][j] = [round(x + d*i - origin[0], 2), round(y + d*j - origin[1], 2)]	# tuple of (x,y) from origin in mm
-      
+for iterations in range(0, number_iterations):
+  for i in range(0,n):	# x-direction
+    for j in range(0,n):	# y-direction
+      # start by checking whether a particular illumination (LED) file exists, if not move on
+      print("Checking if " + str(i) + str(j) + " exists...")
+      if (os.path.isfile(reading_folder + str(i) + str(j) + filetype):
+        # Now we can move on
+        print("..exists. processing...")
+        led_array[i][j] = [round(x + d*i - origin[0], 2), round(y + d*j - origin[1], 2)]	# tuple of (x,y) from origin in mm
+        
+        
+      else:
+       print("No file found. moving to next iteration...")
 
-
-
+# At this point we are done with the FPM retreival.
 
