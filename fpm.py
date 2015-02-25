@@ -155,8 +155,11 @@ for iterations in range(0, number_iterations):
       if (os.path.isfile(reading_folder + str(i) + str(j) + filetype):
         # Now we can move on
         print("..exists. processing...")
-        led_array[i][j] = [round(x + d*i - origin[0], 2), round(y + d*j - origin[1], 2)]	# tuple of (x,y) from origin in mm
-        
+        # We find the (a,b) in mm, position of the present LED in the xy plane, absolute units.
+        a = round(x + d*i - origin[0], 2 
+        b = round(y + d*j - origin[1], 2
+        k_denominator = math.sqrt(a**2 + b**2 + l**2)
+        wave_vector = [a*wave_number/k_denominator, b*wave_number/k_denominator]
         
       else:
        print("No file found. moving to next iteration...")
