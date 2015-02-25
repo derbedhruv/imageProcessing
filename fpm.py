@@ -1,12 +1,52 @@
-# THis file shall stitch together the small images in the fourier domain and produce a higher res image
-# Remember the images are such (2D fourier domain) ..
-# 
-# 	02  12  22
-# 	01  11  21
-#	00  10  20
+##
+# Fourier Ptychographic Microscopy Imaging of known samples for increased resolution.
 #
-# Where each step indicates a step in 50 in the fourier domain. Remember that 11 is the actual (0,0).
+# Author: Dhruv Joshi
+#
+# THis file shall stitch together the small images in the fourier domain and produce a higher res image
+# 
+# Images were taken on an Olympus BX51 fluorescence microscope with a 2X Plan N achromat wide angle wide FOV lens with NA of 0.06
+# This is a small NA and I am not sure if this is the NA of the entire optical system. This will have to be researched. 
+# 
+# The illumination of the system was done as follows: (the row-column numbers are exact)
+# 
+# 00 10 20 | 40 50 60 70 
+# 01 11 21 | 41 51 61 71
+# ---------|------------
+# 03 13 23 | 43 53 63 73
+# 04 14 24 | 44 54 64 74
+# 05 15 25 | 45 55 65 75
+# 06 16 26 | 46 56 66 76
+# 07 17 27 | 47 57 67 77
+#
+# The bottom right of the (22) LED was at the center of the optical axis. The lines here indicate approximately the position of the x 
+# and y-axis. So the origin of the xy plane can be taken to be along the center of the 3rd row and along the tangent to the circular 
+# LEDs of the 2nd column. This is precisely (26.44, 20.82) mm from the origin of the 8x8 array as given at 
+# http://www.ebay.in/itm/8x8-RGB-LED-Matrix-Common-Anode-Diffused-Arduino-Full-Colour-RGB-Color-60mm-/151453142648?aff_source=vizury
+# 
+# Each LED's center is 7.62mm away from the next
+# The distance between the LED array and the transparency is 78 mm.
+#   
+###### importing required modules
 import numpy, pylab, Image, scipy.misc, matplotlib.cm as cm
+
+
+###### UNIVERSAL DEFINITIONS
+NA = 0.06		# numerical aperture of objective
+d = 7.62		# distance between LED centers in mm
+l = 78			# distance from transparency to the LED array in mm
+x = 3.58		# distance in x-axis from top left of LED array to first LED's center
+y = 3.58		# distance in y-axis from top left of LED array to first LED's center
+origin = [26.44, 20.82]	# the origin w.r.t. the top left of the LED array (as seen from +ve z-axis
+lmbda = 623		# dominant wavelength of the monochromatic light source, in nm
+pi = 3.141592		# apple pie
+
+## Now the math part. THis will relate a displacement of (x,y) in the LED aray plane to a shift (kx, ky) in the fourier domain. The 
+# mask for this shift will be a circle in fourier space with a radius of 2*pi*NA/lambda 
+# first we have a for loop which generates the precise positions of the LEDs in an array
+led_array = numpy.empty([8,8], dtype=float)
+
+
 
 # the circular_mask was copied from http://stackoverflow.com/questions/18352973/mask-a-circular-sector-in-a-numpy-array
 def circular_mask(shape,centre,radius):
