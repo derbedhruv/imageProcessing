@@ -142,7 +142,7 @@ starting_ft_image.save(saving_folder + 'starting_guess_ft' + filetype)
 
 print("FT of the upsampled image calculated and saved. Now begins the stitching process.")
 
-#### C'est l'heure.
+#### HERE IS THE MAIN MASALA
 ## Now the iterative stitching part. THis will relate a displacement of (x,y) in the LED aray plane to a shift (kx, ky) in the fourier domain.
 # The mask for this shift will be a circle in fourier space with a radius of 2*pi*NA/lambda 
 # first we have a for loop which loops over all the LEDs in the array
@@ -160,9 +160,13 @@ for iterations in range(0, number_iterations):
         b = round(y + d*j - origin[1], 2
         k_denominator = math.sqrt(a**2 + b**2 + l**2)
         wave_vector = [a*wave_number/k_denominator, b*wave_number/k_denominator]
+
+        print("calculated k-vector. Now will extract the FT of upsampled at (kx, ky) with pupil NA*k")
+        extracted_ft
         
       else:
        print("No file found. moving to next iteration...")
+  # next iteration
 
 # At this point we are done with the FPM retreival.
 
