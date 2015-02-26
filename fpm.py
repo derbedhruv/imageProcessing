@@ -128,7 +128,8 @@ ncentral = numpy.array(central_image)
 print("upsampling the guess image...")
 
 # now the actual upsampling..
-upsampled = scipy.misc.imresize(ncentral, (upsampling_scaling_factor*ncentral.shape[0], upsampling_scaling_factor*ncentral.shape[1]))
+upsampled_size = upsampling_scaling_factor*ncentral.shape[0], upsampling_scaling_factor*ncentral.shape[1]
+upsampled = scipy.misc.imresize(ncentral, upsampled_size)
 upsampled_guess_image = Image.fromarray(upsampled)
 # pylab.figure(); pylab.imshow(upsampled_guess_image, cmap=cm.Greys_r); pylab.show()
 
@@ -156,8 +157,8 @@ for iterations in range(0, number_iterations):
         # Now we can move on
         print("..exists. processing...")
         # We find the (a,b) in mm, position of the present LED in the xy plane, absolute units.
-        a = round(x + d*i - origin[0], 2 
-        b = round(y + d*j - origin[1], 2
+        a = round(x + d*i - origin[0], 2)
+        b = round(y + d*j - origin[1], 2)
         k_denominator = math.sqrt(a**2 + b**2 + l**2)
         wave_vector = [a*wave_number/k_denominator, b*wave_number/k_denominator]
         # TODO: scale wave_number to same units as the FT
@@ -168,10 +169,34 @@ for iterations in range(0, number_iterations):
         system_ft[~k_pupil] = 0		# remove everything in the FT except in the pupil area
         
         # Now we convert this to an image.
+        generated_lowres_image = numpy.fft.ifft2(numpy.fft.fftshift(system_ft))
+        
+        # we then read in the corresponding measured image, and upsample it
+        measured_lowres_image = numpy.array(Image.open(reading_folder + str(i) + str(j) + filetype).convert("L"))
+        measured_highres_image = scipy.misc.imresize(measured_lowres_image, upsampled_size)
+        
+        # going to replace the sqrt(intensity) of the generated image with the intensity of this upsampled measured image
+        replaced_intensity_image = fienup_intensity_replace(generated_lowres_image, measured_highres_image)
+
+        # now we simply have to take its FFT and replace the corresponding section of the FFT in the original FFT where we chopped from
+        replaced_intensity_ft = numpy.fft.fftshift(numpy.fft.fft2(replaced_intensity_image))
+        starting_ft[k_pupil] = replaced_intensity_ft[k_pupil]
+
+        # and this round is done, now go on to the other rounds of replacement
         
       else:
        print("No file found. moving to next iteration...")
-  # next iteration
+  # iteration done.
+  print("ITERATION OVER. will print out image and FT")
+  current_ft = 20*numpy.log(numpy.abs(starting_ft))
+  current_ft = Image.fromarray(current_ft.astype(numpy.uint8))
+  pylab.figure()
+  pylab.imshow(current_ft, cmap=cm.Greys_r)
+  
+  current_image = numpy.fft.ifft2(numpy.fft.fftshift(starting_ft))
+  current_image = Image.fromarray(current_image.astype(numpy.uint8))
+  pylab.figure()
+  pylab.imshow(current_image, cmap=cm.Greys_r)
 
 # At this point we are done with the FPM retreival.
 
