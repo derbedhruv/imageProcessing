@@ -160,9 +160,14 @@ for iterations in range(0, number_iterations):
         b = round(y + d*j - origin[1], 2
         k_denominator = math.sqrt(a**2 + b**2 + l**2)
         wave_vector = [a*wave_number/k_denominator, b*wave_number/k_denominator]
+        # TODO: scale wave_number to same units as the FT
 
         print("calculated k-vector. Now will extract the FT of upsampled at (kx, ky) with pupil NA*k")
-        extracted_ft
+        system_ft = starting_ft		# make a copy of the upsampled FT
+        k_pupil = circular_mask(starting_ft.shape, [wave_vector], wave_number*NA)
+        system_ft[~k_pupil] = 0		# remove everything in the FT except in the pupil area
+        
+        # Now we convert this to an image.
         
       else:
        print("No file found. moving to next iteration...")
