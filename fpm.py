@@ -29,7 +29,7 @@
 # Each LED's center is 7.62mm away from the next
 # The distance between the LED array and the transparency is 78 mm.
 #   
-# The camera used for imaging was a Jenoptik ProgRes C3, with 416x308 pixel resolution of images taken. Pixel dimensions are 3.45 micron^2 
+# The camera used for imaging was a Jenoptik ProgRes C3, with 416x308 pixel resolution of images taken. Pixel dimensions are 3.45x3.45 micron 
 # The sensor size is 7.58 mm x 6.54 mm, and the max resolution attainable is 2080 x 1542 pixels 
 #   
 ## we assume that the authors are completely correct in their assumption that the shift in the fourier domain shall be
@@ -153,7 +153,7 @@ for iterations in range(0, number_iterations):
     for j in range(0,n):	# y-direction
       # start by checking whether a particular illumination (LED) file exists, if not move on
       print("Checking if " + str(i) + str(j) + " exists...")
-      if (os.path.isfile(reading_folder + str(i) + str(j) + filetype):
+      if (os.path.isfile(reading_folder + "/" +  str(i) + str(j) + filetype):
         # Now we can move on
         print("..exists. processing...")
         # We find the (a,b) in mm, position of the present LED in the xy plane, absolute units.
@@ -161,7 +161,9 @@ for iterations in range(0, number_iterations):
         b = round(y + d*j - origin[1], 2)
         k_denominator = math.sqrt(a**2 + b**2 + l**2)
         wave_vector = [a*wave_number/k_denominator, b*wave_number/k_denominator]
+
         # TODO: scale wave_number to same units as the FT
+        
 
         print("calculated k-vector. Now will extract the FT of upsampled at (kx, ky) with pupil NA*k")
         system_ft = starting_ft		# make a copy of the upsampled FT
