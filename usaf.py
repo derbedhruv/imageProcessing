@@ -60,8 +60,8 @@ def band_stop(target_image, freq, spread):
   center = [target_image.shape[0]/2, target_image.shape[1]/2]
   
   # convert the 'frequency' into pixels
-  nyquist_freq = 1.00/(2*pixel_size)		# arb. units, this is the max freqyency which can be resolved by this fft
-  frequency = 2.*(freq/nyquist_freq)*(target_image.shape[1]/2)
+  nyquist_freq = 1.00/(2*pixel_size)		# units of micron-1, this is the max freqyency which can be resolved by this fft
+  frequency = 4.*(freq/nyquist_freq)*(target_image.shape[1]/2)	# multiplying by 4 because somehow it works this way
   
   # define two circular masks with radius (frequency - spread) and (frequency + spread)
   # inner = circular_mask(target_image.shape, center, (frequency - spread))
@@ -103,9 +103,11 @@ def band_stop(target_image, freq, spread):
 # we start by calculating the frequency where we would like to remove (dependent on the object size)
 # first we need the size of the object we want to attenuate
 object_size = 100.0	# microns
+print(object_size)
+print("microns")
 
 # freqyency calculatins...
-object_frequency = 1.00/(2*object_size)
+object_frequency = 1.00/(2*object_size)		# again in micron-1
 
 # then apply the circular frequency mask..
 final_image = band_stop(usaf, object_frequency, 1)
