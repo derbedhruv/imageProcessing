@@ -9,28 +9,28 @@
 # 
 # Images were taken on an Olympus BX51 fluorescence microscope with a 2X Plan N achromat wide angle wide FOV lens with NA of 0.06
 # This is a small NA and I am not sure if this is the NA of the entire optical system. This will have to be researched. 
-# 
+#
+# Data was taken on 03-march-2015 
 # The illumination of the system was done as follows: (the row-column numbers are exact)
 # 
-# 00 10 20 | 40 50 60 70 
-# 01 11 21 | 41 51 61 71
-# ---------|------------
-# 03 13 23 | 43 53 63 73
-# 04 14 24 | 44 54 64 74
-# 05 15 25 | 45 55 65 75
-# 06 16 26 | 46 56 66 76
-# 07 17 27 | 47 57 67 77
+# 00 10 20 30 | 50 60 70 
+# 01 11 21 31 | 51 61 71
+# 02 12 22 32 | 52 62 72
+# 03 13 23 33 | 53 63 73
+# 04 14 24 34 | 54 64 74
+# 05 15 25 35 | 55 65 75
+# 06 16 26 36 | 56 66 76
+# 07 17 27 37 | 57 67 77
 #
-# The bottom right of the (22) LED was at the center of the optical axis. The lines here indicate approximately the position of the x 
-# and y-axis. So the origin of the xy plane can be taken to be along the center of the 3rd row and along the tangent to the circular 
-# LEDs of the 2nd column. This is precisely (26.44, 20.82) mm from the origin of the 8x8 array as given at 
-# http://www.ebay.in/itm/8x8-RGB-LED-Matrix-Common-Anode-Diffused-Arduino-Full-Colour-RGB-Color-60mm-/151453142648?aff_source=vizury
-# 
-# Each LED's center is 7.62mm away from the next
-# The distance between the LED array and the transparency is 78 mm.
+# The 4,4 was taken to be the center of the optical axis (the system was manipulated in such a way). The distance between centers of 
+# each LED was 4mm, and the distance between the outermost LEDs and the edge of the matrix was 2mm.  Hence the optical axis passes through
+# the point (14, 18) from the top left (The orientation of the LED matrix was such that (0,0) was on the top right and (0,7) was on the 
+# bottom left. 
+#  
+# The distance between the LED array and the transparency is 83 mm.
 #   
-# The camera used for imaging was a Jenoptik ProgRes C3, with 416x308 pixel resolution of images taken. Pixel dimensions are 3.45x3.45 micron 
-# The sensor size is 7.58 mm x 6.54 mm, and the max resolution attainable is 2080 x 1542 pixels 
+# The camera used for imaging was a Jenoptik ProgRes C3, with a 2080x1642 pixel resolution of images taken. Pixel dimensions are 
+# 3.45x3.45 micron. The magnification factor on the microscope is 2x, so all dimensions would be scaled down by that factor.  
 #   
 ## we assume that the authors are completely correct in their assumption that the shift in the fourier domain shall be
 # precisely (kx, ky), where these correpond to the wavevectors of each LED source.
@@ -48,27 +48,29 @@ import numpy, pylab, Image, scipy.misc, matplotlib.cm as cm, os
 ###### UNIVERSAL DEFINITIONS
 ## Experimental setup constants
 NA = 0.06		# numerical aperture of objective
-d = 7.62		# distance between LED centers in mm
-l = 78			# distance from transparency to the LED array in mm
-x = 3.58		# distance in x-axis from top left of LED array to first LED's center
-y = 3.58		# distance in y-axis from top left of LED array to first LED's center
-origin = [26.44, 20.82]	# the origin w.r.t. the top left of the LED array (as seen from +ve z-axis
-lmbda = 623		# dominant wavelength of the monochromatic light source, in nm
+d = 4.			# distance between LED centers in mm
+l = 83.			# distance from transparency to the LED array in mm
+x = 2.			# distance in x-axis from top left of LED array to first LED's center (mm)
+y = 2.			# distance in y-axis from top left of LED array to first LED's center (mm)
+origin = [14., 18.]	# the origin w.r.t. the top left of the LED array (as seen from +ve z-axis
+lmbda = 0.623		# dominant wavelength of the monochromatic light source, in microns
 n = 8			# single dimension of the (square) LED array.
+pixel_size = 3.45	# pixel dimensions in microns
+magnification = 2	# image magnification w.r.t. object by the objective
 
 ## mathematical and physical constants
 pi = 3.141592		# apple pie
 
 ## System constants
-reading_folder = "./images/"	# the folder where the files of the name given above lie..
+reading_folder = "./20150303_fpm/"	# the folder where the files of the name given above lie..
 saving_folder = "./images/fpm/"	# the folder where we'll save the various iterations of the images and their FTs to
 filetype = ".jpg"
-filename = "00"		# the chosen file to be the upsampled guess image, or starting point 
+filename = "44"		# the chosen file to be the upsampled guess image, or starting point 
 number_iterations = 1	# no of times we will iterate the FPM reconstruction algo
 
 ## definitions which derive from these universal definitions..
 led_array = numpy.empty([n,n], dtype=object)	# 'object' because we will be making a 2d array of tuples
-wave_number = 2*pi/lmbda
+wave_number = 2*pi/lmbda			# in micron-1
 upsampling_scaling_factor = 2		# the scaling factor by which we will enhance the resolution of the image
 
 ### FUNCTION DEFINITIONS
@@ -106,15 +108,25 @@ def circular_mask(shape,centre,radius):
 ## Next we have a function that replaces the sqrt of Intensity of the complex image expressed in the form sqrt(I)*exp(j*Phase) 
 # and returns an image back again. Since this comes from the phase retreival algorithm developed by Fienup, we will name it after him.
 def fienup_intensity_replace(source_image, replacement_intensity_image):
-  shape = source_image.shape
-  target_image = numpy.zeros(source_image.shape)	# the target image which shall be returned
-  # Now remember that the source image is an mxn complex image. We will cycle through each pixel
+  target_image = numpy.zeros(source_image.shape, dtype=source_image.dtype)	# the target image which shall be returned
+  # Now remember that the source image is an mxn complex image. We will do this the numpy way. the faster way.
+  # i.e. create three individual 2d numpy arrays and multiple them
+  replacement_intensity = numpy.abs(replacement_intensity_image)
+  source_intensity = numpy.abs(source_image)
+
+  # now the multiplication
+  target_image = replacement_intensity*source_image/source_intensity
+
+  '''
   for m in range(0, shape[0]):
     for n in range(0, shape[1]):
       current_complex_pixel = source_image[i][j]
+
       current_complex_pixel_intensity = numpy.abs(current_complex_pixel)	# find the sqrt(a2 + b2) of a + ib
-      target_image[i][j] = numpy.abs(replacement_intensity_image)*current_complex_pixel/current_complex_pixel_intensity
-  
+
+      target_image[i][j] = numpy.abs(replacement_intensity_image[i][j])*current_complex_pixel/current_complex_pixel_intensity
+  '''
+
   return target_image
 
 
@@ -124,6 +136,9 @@ def fienup_intensity_replace(source_image, replacement_intensity_image):
 print("STEP 1: Starting with guess image...")
 central_image = Image.open(reading_folder + filename + filetype).convert("L")
 ncentral = numpy.array(central_image)
+
+## from this image we find the conversion factor of spatial frequency into pixels..
+sfrq_to_px = max(ncentral.shape)/(4*pixel_size*magnification)	# spatial frequency in micron-1 converted to pixels in the fourier domain.
 
 print("upsampling the guess image...")
 
@@ -137,8 +152,11 @@ upsampled_guess_image = Image.fromarray(upsampled)
 upsampled_guess_image.save(saving_folder + 'starting_guess' + filetype)
 
 # we find its fourier transform and keep it handy
-starting_ft = 20*numpy.log(numpy.abs(numpy.fft.fftshift(numpy.fft.fft2(up_channel))))
-starting_ft_image = Image.fromarray(starting_ft.astype(numpy.uint8))
+# to prevent a memory error from happening, this will be done in seperate steps...
+starting_ft = numpy.fft.fft2(upsampled_guess_image)
+starting_ft = numpy.fft.fftshift(starting_ft)
+starting_psd = 20*numpy.log(numpy.abs(starting_ft))
+starting_ft_image = Image.fromarray(starting_psd.astype(numpy.uint8))
 starting_ft_image.save(saving_folder + 'starting_guess_ft' + filetype)
 
 print("FT of the upsampled image calculated and saved. Now begins the stitching process.")
@@ -153,22 +171,27 @@ for iterations in range(0, number_iterations):
     for j in range(0,n):	# y-direction
       # start by checking whether a particular illumination (LED) file exists, if not move on
       print("Checking if " + str(i) + str(j) + " exists...")
-      if (os.path.isfile(reading_folder + "/" +  str(i) + str(j) + filetype):
+      if (os.path.isfile(reading_folder + "/" +  str(i) + str(j) + filetype)):
         # Now we can move on
         print("..exists. processing...")
         # We find the (a,b) in mm, position of the present LED in the xy plane, absolute units.
         a = round(x + d*i - origin[0], 2)
         b = round(y + d*j - origin[1], 2)
-        k_denominator = math.sqrt(a**2 + b**2 + l**2)
-        wave_vector = [a*wave_number/k_denominator, b*wave_number/k_denominator]
+        k_denominator = numpy.sqrt(a**2 + b**2 + l**2)
 
-        # TODO: scale wave_number to same units as the FT
-        
+        # now the most important part - we calculate the wavevector (kx, ky) and scale it to the units of pixels in the fourier domain
+        # explanation:
+        # the image is flipped in both axes w.r.t. the object, so the wavenumber will have to be made -ve in both dimensions
+        # then we use the scaling factor which was calculated earlier.
+        wave_vector = [-a*(wave_number/k_denominator)*sfrq_to_px, -b*(wave_number/k_denominator)*sfrq_to_px]
+
 
         print("calculated k-vector. Now will extract the FT of upsampled at (kx, ky) with pupil NA*k")
         system_ft = starting_ft		# make a copy of the upsampled FT
-        k_pupil = circular_mask(starting_ft.shape, [wave_vector], wave_number*NA)
-        system_ft[~k_pupil] = 0		# remove everything in the FT except in the pupil area
+        k_pupil = circular_mask(starting_ft.shape, wave_vector, wave_number*NA)
+        inverse_ft = system_ft
+        inverse_ft[k_pupil] = 0
+        system_ft = system_ft - inverse_ft		# remove everything in the FT except in the pupil area
         
         # Now we convert this to an image.
         generated_lowres_image = numpy.fft.ifft2(numpy.fft.fftshift(system_ft))
