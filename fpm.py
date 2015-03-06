@@ -113,9 +113,16 @@ def fienup_intensity_replace(source_image, replacement_intensity_image):
   # i.e. create three individual 2d numpy arrays and multiple them
   replacement_intensity = numpy.abs(replacement_intensity_image)
   source_intensity = numpy.abs(source_image)
+  print(numpy.average(source_image))
+  print(numpy.average(source_intensity))
 
   # now the multiplication
   target_image = replacement_intensity*source_image/source_intensity
+  print(numpy.average(target_image))
+
+  # renormalize
+  target_image = 255*(target_image/numpy.max(target_image))
+  print(numpy.average(target_image))
 
   '''
   for m in range(0, shape[0]):
@@ -183,18 +190,20 @@ for iterations in range(0, number_iterations):
         # explanation:
         # the image is flipped in both axes w.r.t. the object, so the wavenumber will have to be made -ve in both dimensions
         # then we use the scaling factor which was calculated earlier.
-        wave_vector = [-a*(wave_number/k_denominator)*sfrq_to_px, -b*(wave_number/k_denominator)*sfrq_to_px]
-
+        wave_vector = [-a*(wave_number/k_denominator)*sfrq_to_px, b*(wave_number/k_denominator)*sfrq_to_px]
+        k_shift = [wave_vector[0] + starting_ft.shape[0]/2, wave_vector[1] + starting_ft.shape[1]/2]
 
         print("calculated k-vector. Now will extract the FT of upsampled at (kx, ky) with pupil NA*k")
-        system_ft = starting_ft		# make a copy of the upsampled FT
-        k_pupil = circular_mask(starting_ft.shape, wave_vector, wave_number*NA)
-        inverse_ft = system_ft
+        system_ft = numpy.copy(starting_ft)		# make a copy of the upsampled FT
+        k_pupil = circular_mask(starting_ft.shape, k_shift, sfrq_to_px*wave_number*NA)
+        inverse_ft = numpy.copy(system_ft)
         inverse_ft[k_pupil] = 0
         system_ft = system_ft - inverse_ft		# remove everything in the FT except in the pupil area
         
         # Now we convert this to an image.
+        print(numpy.average(system_ft))
         generated_lowres_image = numpy.fft.ifft2(numpy.fft.fftshift(system_ft))
+        print(numpy.average(generated_lowres_image))
         
         # we then read in the corresponding measured image, and upsample it
         measured_lowres_image = numpy.array(Image.open(reading_folder + str(i) + str(j) + filetype).convert("L"))
@@ -219,9 +228,13 @@ for iterations in range(0, number_iterations):
   pylab.imshow(current_ft, cmap=cm.Greys_r)
   
   current_image = numpy.fft.ifft2(numpy.fft.fftshift(starting_ft))
+
+  # print(numpy.max(current_image))
+
   current_image = Image.fromarray(current_image.astype(numpy.uint8))
+  current_image.save(saving_folder + "fpm_image" + filetype)
   pylab.figure()
   pylab.imshow(current_image, cmap=cm.Greys_r)
 
 # At this point we are done with the FPM retreival.
-
+pylab.show()
