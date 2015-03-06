@@ -118,7 +118,7 @@ def fienup_intensity_replace(source_image, replacement_intensity_image):
   target_image = replacement_intensity*source_image/source_intensity
 
   # renormalize
-  target_image = 255*(target_image/numpy.max(target_image))
+  target_image = target_image/numpy.max(target_image)
 
   return target_image
 
@@ -183,9 +183,16 @@ for iterations in range(0, number_iterations):
         print("calculated k-vector. Now will extract the FT of upsampled at (kx, ky) with pupil NA*k")
         system_ft = numpy.copy(starting_ft)		# make a copy of the upsampled FT
         k_pupil = circular_mask(starting_ft.shape, k_shift, sfrq_to_px*wave_number*NA)
+        center_pupil = circular_mask(starting_ft.shape, [starting_ft.shape[0]/2, starting_ft.shape[1]/2], sfrq_to_px*wave_number*NA)
+
+        '''
         inverse_ft = numpy.copy(system_ft)
         inverse_ft[k_pupil] = 0
         system_ft = system_ft - inverse_ft		# remove everything in the FT except in the pupil area
+        '''
+        # now we remove a circular section of the spectrum and use that to be the center of the FT of an image
+        system_ft[:] = 0+0j
+        system_ft[center_pupil] = starting_ft[k_pupil]
         
         # Now we convert this to an image.
         generated_lowres_image = numpy.fft.ifft2(numpy.fft.fftshift(system_ft))
@@ -199,11 +206,27 @@ for iterations in range(0, number_iterations):
 
         # now we simply have to take its FFT and replace the corresponding section of the FFT in the original FFT where we chopped from
         replaced_intensity_ft = numpy.fft.fftshift(numpy.fft.fft2(replaced_intensity_image))
-        center_pupil = circular_mask(starting_ft.shape, [starting_ft.shape[0]/2, starting_ft.shape[1]/2], sfrq_to_px*wave_number*NA)
         starting_ft[k_pupil] = replaced_intensity_ft[center_pupil]
 
         # and this round is done, now go on to the other rounds of replacement
+        # but we will show the image and ft (for debugging)
+        '''
+        current_ft = 20*numpy.log(numpy.abs(starting_ft))
+        current_ft = Image.fromarray(current_ft.astype(numpy.uint8))
+        pylab.figure()
+        pylab.imshow(current_ft, cmap=cm.Greys_r)
         
+        current_image = numpy.fft.ifft2(numpy.fft.fftshift(starting_ft))
+        
+        current_image = Image.fromarray(current_image.astype(numpy.uint8))
+        current_image.save(saving_folder + "fpm_image" + filetype)
+        pylab.figure()
+        pylab.imshow(current_image, cmap=cm.Greys_r)
+
+        # At this point we are done with the FPM retreival.
+        pylab.show()
+        '''
+         
       else:
        print("No file found. moving to next iteration...")
   # iteration done.
@@ -215,8 +238,6 @@ for iterations in range(0, number_iterations):
   
   current_image = numpy.fft.ifft2(numpy.fft.fftshift(starting_ft))
 
-  # print(numpy.max(current_image))
-
   current_image = Image.fromarray(current_image.astype(numpy.uint8))
   current_image.save(saving_folder + "fpm_image" + filetype)
   pylab.figure()
@@ -224,3 +245,4 @@ for iterations in range(0, number_iterations):
 
 # At this point we are done with the FPM retreival.
 pylab.show()
+
