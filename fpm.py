@@ -76,34 +76,34 @@ upsampling_scaling_factor = 2		# the scaling factor by which we will enhance the
 ### FUNCTION DEFINITIONS
 # the circular_mask was copied from http://stackoverflow.com/questions/18352973/mask-a-circular-sector-in-a-numpy-array
 def circular_mask(shape,centre,radius):
-    """
-    Return a boolean mask for a circular sector. The start/stop angles in  
-    `angle_range` should be given in clockwise order.
-    """
-    angle_range = [0,360]
+  """
+  Return a boolean mask for a circular sector. The start/stop angles in  
+  `angle_range` should be given in clockwise order.
+  """
+  angle_range = [0,360]
 
-    x,y = numpy.ogrid[:shape[0],:shape[1]]
-    cx,cy = centre
-    tmin,tmax = numpy.deg2rad(angle_range)
+  x,y = numpy.ogrid[:shape[0],:shape[1]]
+  cx,cy = centre
+  tmin,tmax = numpy.deg2rad(angle_range)
 
-    # ensure stop angle > start angle
-    if tmax < tmin:
-            tmax += 2*numpy.pi
+  # ensure stop angle > start angle
+  if tmax < tmin:
+    tmax += 2*numpy.pi
 
-    # convert cartesian --> polar coordinates
-    r2 = (x-cx)*(x-cx) + (y-cy)*(y-cy)
-    theta = numpy.arctan2(x-cx,y-cy) - tmin
+  # convert cartesian --> polar coordinates
+  r2 = (x-cx)*(x-cx) + (y-cy)*(y-cy)
+  theta = numpy.arctan2(x-cx,y-cy) - tmin
 
-    # wrap angles between 0 and 2*pi
-    theta %= (2*numpy.pi)
+  # wrap angles between 0 and 2*pi
+  theta %= (2*numpy.pi)
 
-    # circular mask
-    circmask = r2 <= radius*radius
+  # circular mask
+  circmask = r2 <= radius*radius
 
-    # angular mask
-    anglemask = theta <= (tmax-tmin)
+  # angular mask
+  anglemask = theta <= (tmax-tmin)
 
-    return circmask*anglemask
+  return circmask*anglemask
 
 ## Next we have a function that replaces the sqrt of Intensity of the complex image expressed in the form sqrt(I)*exp(j*Phase) 
 # and returns an image back again. Since this comes from the phase retreival algorithm developed by Fienup, we will name it after him.
@@ -113,26 +113,12 @@ def fienup_intensity_replace(source_image, replacement_intensity_image):
   # i.e. create three individual 2d numpy arrays and multiple them
   replacement_intensity = numpy.abs(replacement_intensity_image)
   source_intensity = numpy.abs(source_image)
-  print(numpy.average(source_image))
-  print(numpy.average(source_intensity))
 
   # now the multiplication
   target_image = replacement_intensity*source_image/source_intensity
-  print(numpy.average(target_image))
 
   # renormalize
   target_image = 255*(target_image/numpy.max(target_image))
-  print(numpy.average(target_image))
-
-  '''
-  for m in range(0, shape[0]):
-    for n in range(0, shape[1]):
-      current_complex_pixel = source_image[i][j]
-
-      current_complex_pixel_intensity = numpy.abs(current_complex_pixel)	# find the sqrt(a2 + b2) of a + ib
-
-      target_image[i][j] = numpy.abs(replacement_intensity_image[i][j])*current_complex_pixel/current_complex_pixel_intensity
-  '''
 
   return target_image
 
@@ -201,9 +187,7 @@ for iterations in range(0, number_iterations):
         system_ft = system_ft - inverse_ft		# remove everything in the FT except in the pupil area
         
         # Now we convert this to an image.
-        print(numpy.average(system_ft))
         generated_lowres_image = numpy.fft.ifft2(numpy.fft.fftshift(system_ft))
-        print(numpy.average(generated_lowres_image))
         
         # we then read in the corresponding measured image, and upsample it
         measured_lowres_image = numpy.array(Image.open(reading_folder + str(i) + str(j) + filetype).convert("L"))
