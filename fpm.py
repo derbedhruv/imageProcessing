@@ -131,7 +131,7 @@ central_image = Image.open(reading_folder + filename + filetype).convert("L")
 ncentral = numpy.array(central_image)
 
 ## from this image we find the conversion factor of spatial frequency into pixels..
-sfrq_to_px = max(ncentral.shape)/(4*pixel_size*magnification)	# spatial frequency in micron-1 converted to pixels in the fourier domain.
+sfrq_to_px = upsampling_scaling_factor*max(ncentral.shape)/(4*pixel_size*magnification)
 
 print("upsampling the guess image...")
 
@@ -177,7 +177,8 @@ for iterations in range(0, number_iterations):
         # the image is flipped in both axes w.r.t. the object, so the wavenumber will have to be made -ve in both dimensions
         # then we use the scaling factor which was calculated earlier.
         wave_vector = [-a*(wave_number/k_denominator)*sfrq_to_px, b*(wave_number/k_denominator)*sfrq_to_px]
-        k_shift = [wave_vector[0] + starting_ft.shape[0]/2, wave_vector[1] + starting_ft.shape[1]/2]
+        k_shift = [int(wave_vector[0] + starting_ft.shape[0]/2), int(wave_vector[1] + starting_ft.shape[1]/2)]
+        print(k_shift)
 
         print("calculated k-vector. Now will extract the FT of upsampled at (kx, ky) with pupil NA*k")
         system_ft = numpy.copy(starting_ft)		# make a copy of the upsampled FT
@@ -198,7 +199,8 @@ for iterations in range(0, number_iterations):
 
         # now we simply have to take its FFT and replace the corresponding section of the FFT in the original FFT where we chopped from
         replaced_intensity_ft = numpy.fft.fftshift(numpy.fft.fft2(replaced_intensity_image))
-        starting_ft[k_pupil] = replaced_intensity_ft[k_pupil]
+        center_pupil = circular_mask(starting_ft.shape, [starting_ft.shape[0]/2, starting_ft.shape[1]/2], sfrq_to_px*wave_number*NA)
+        starting_ft[k_pupil] = replaced_intensity_ft[center_pupil]
 
         # and this round is done, now go on to the other rounds of replacement
         
