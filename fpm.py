@@ -115,10 +115,7 @@ def fienup_intensity_replace(source_image, replacement_intensity_image):
   source_intensity = numpy.abs(source_image)
 
   # now the multiplication
-  target_image = replacement_intensity*source_image/source_intensity
-
-  # renormalize
-  target_image = target_image/numpy.max(target_image)
+  target_image = numpy.sqrt(replacement_intensity*source_image/source_intensity)
 
   return target_image
 
@@ -176,7 +173,7 @@ for iterations in range(0, number_iterations):
         # explanation:
         # the image is flipped in both axes w.r.t. the object, so the wavenumber will have to be made -ve in both dimensions
         # then we use the scaling factor which was calculated earlier.
-        wave_vector = [-a*(wave_number/k_denominator)*sfrq_to_px, b*(wave_number/k_denominator)*sfrq_to_px]
+        wave_vector = [a*(wave_number/k_denominator)*sfrq_to_px, -b*(wave_number/k_denominator)*sfrq_to_px]
         k_shift = [int(wave_vector[0] + starting_ft.shape[0]/2), int(wave_vector[1] + starting_ft.shape[1]/2)]
         print(k_shift)
 
@@ -185,17 +182,13 @@ for iterations in range(0, number_iterations):
         k_pupil = circular_mask(starting_ft.shape, k_shift, sfrq_to_px*wave_number*NA)
         center_pupil = circular_mask(starting_ft.shape, [starting_ft.shape[0]/2, starting_ft.shape[1]/2], sfrq_to_px*wave_number*NA)
 
-        '''
-        inverse_ft = numpy.copy(system_ft)
-        inverse_ft[k_pupil] = 0
-        system_ft = system_ft - inverse_ft		# remove everything in the FT except in the pupil area
-        '''
         # now we remove a circular section of the spectrum and use that to be the center of the FT of an image
         system_ft[:] = 0+0j
         system_ft[center_pupil] = starting_ft[k_pupil]
         
         # Now we convert this to an image.
         generated_lowres_image = numpy.fft.ifft2(numpy.fft.fftshift(system_ft))
+        print(numpy.average(generated_lowres_image))
         
         # we then read in the corresponding measured image, and upsample it
         measured_lowres_image = numpy.array(Image.open(reading_folder + str(i) + str(j) + filetype).convert("L"))
@@ -206,11 +199,16 @@ for iterations in range(0, number_iterations):
 
         # now we simply have to take its FFT and replace the corresponding section of the FFT in the original FFT where we chopped from
         replaced_intensity_ft = numpy.fft.fftshift(numpy.fft.fft2(replaced_intensity_image))
+
+        '''pylab.figure()
+        pylab.imshow(system_ft.astype(numpy.uint8), cmap=cm.Greys_r)
+        pylab.show()
+        '''
+
         starting_ft[k_pupil] = replaced_intensity_ft[center_pupil]
 
         # and this round is done, now go on to the other rounds of replacement
         # but we will show the image and ft (for debugging)
-        '''
         current_ft = 20*numpy.log(numpy.abs(starting_ft))
         current_ft = Image.fromarray(current_ft.astype(numpy.uint8))
         pylab.figure()
@@ -225,8 +223,6 @@ for iterations in range(0, number_iterations):
 
         # At this point we are done with the FPM retreival.
         pylab.show()
-        '''
-         
       else:
        print("No file found. moving to next iteration...")
   # iteration done.
