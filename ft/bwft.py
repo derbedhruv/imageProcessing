@@ -1,8 +1,8 @@
 # This shall display the FT of a greyscale image and give the capacity to modify the FT
 # FIRST al the declarations...
-imageName = "images/eye.jpg"
+imageName = "../20150303_fpm/44.jpg"
 
-import numpy, Image, pylab, matplotlib.cm as cm
+import numpy, Image, pylab, matplotlib.cm as cm, scipy.misc
 
 # the circular_mask was copied from http://stackoverflow.com/questions/18352973/mask-a-circular-sector-in-a-numpy-array
 def circular_mask(shape,centre,radius):
@@ -38,6 +38,7 @@ def circular_mask(shape,centre,radius):
 # Now we begin the fun...
 im = Image.open(imageName).convert("L")		# L makes it greyscale
 image = numpy.array(im)		# convert to numpy array
+image = scipy.misc.imresize(image, [2*image.shape[0], 2*image.shape[1]])
 
 f = numpy.fft.fftshift(numpy.fft.fft2(image))		# 2D fft done, just like MATLAB, also shifted yo
 
@@ -48,7 +49,7 @@ f = numpy.fft.fftshift(numpy.fft.fft2(image))		# 2D fft done, just like MATLAB, 
 cx = f.shape[0]/2 
 cy = f.shape[1]/2
 mask = circular_mask(image.shape, (cx + 50, cy - 50), 100)
-f[~mask] = 0		# chop out circular section
+# f[~mask] = 0		# chop out circular section
 psd = numpy.abs(f)
 
 imm = numpy.fft.ifft2(numpy.fft.fftshift(f))
@@ -59,5 +60,5 @@ pylab.figure()
 pylab.imshow(image_modi, cmap = cm.Greys_r)		# display in greyscale space
 
 pylab.figure()
-pylab.imshow(numpy.log10(psd+1))
+pylab.imshow(numpy.log10(psd+1), cmap = cm.Greys_r)
 pylab.show()

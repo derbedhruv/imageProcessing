@@ -128,12 +128,12 @@ central_image = Image.open(reading_folder + filename + filetype).convert("L")
 ncentral = numpy.array(central_image)
 
 ## from this image we find the conversion factor of spatial frequency into pixels..
-sfrq_to_px = upsampling_scaling_factor*max(ncentral.shape)/(4*pixel_size*magnification)
+sfrq_to_px = upsampling_scaling_factor*max(ncentral.shape)/(pixel_size*magnification)
 
 print("upsampling the guess image...")
 
 # now the actual upsampling..
-upsampled_size = upsampling_scaling_factor*ncentral.shape[0], upsampling_scaling_factor*ncentral.shape[1]
+upsampled_size = [upsampling_scaling_factor*ncentral.shape[0], upsampling_scaling_factor*ncentral.shape[1]]
 upsampled = scipy.misc.imresize(ncentral, upsampled_size)
 upsampled_guess_image = Image.fromarray(upsampled)
 # pylab.figure(); pylab.imshow(upsampled_guess_image, cmap=cm.Greys_r); pylab.show()
@@ -173,7 +173,7 @@ for iterations in range(0, number_iterations):
         # explanation:
         # the image is flipped in both axes w.r.t. the object, so the wavenumber will have to be made -ve in both dimensions
         # then we use the scaling factor which was calculated earlier.
-        wave_vector = [a*(wave_number/k_denominator)*sfrq_to_px, -b*(wave_number/k_denominator)*sfrq_to_px]
+        wave_vector = [b*(wave_number/k_denominator)*sfrq_to_px, -a*(wave_number/k_denominator)*sfrq_to_px]
         k_shift = [int(wave_vector[0] + starting_ft.shape[0]/2), int(wave_vector[1] + starting_ft.shape[1]/2)]
         print(k_shift)
 
@@ -187,7 +187,8 @@ for iterations in range(0, number_iterations):
         system_ft[center_pupil] = starting_ft[k_pupil]
         
         # Now we convert this to an image.
-        generated_lowres_image = numpy.fft.ifft2(numpy.fft.fftshift(system_ft))
+        generated_lowres_image = numpy.fft.fftshift(system_ft)
+        generated_lowres_image = numpy.fft.ifft2(generated_lowres_image)
         print(numpy.average(generated_lowres_image))
         
         # we then read in the corresponding measured image, and upsample it
@@ -199,30 +200,25 @@ for iterations in range(0, number_iterations):
 
         # now we simply have to take its FFT and replace the corresponding section of the FFT in the original FFT where we chopped from
         replaced_intensity_ft = numpy.fft.fftshift(numpy.fft.fft2(replaced_intensity_image))
-
-        '''pylab.figure()
-        pylab.imshow(system_ft.astype(numpy.uint8), cmap=cm.Greys_r)
-        pylab.show()
-        '''
-
         starting_ft[k_pupil] = replaced_intensity_ft[center_pupil]
 
         # and this round is done, now go on to the other rounds of replacement
         # but we will show the image and ft (for debugging)
-        current_ft = 20*numpy.log(numpy.abs(starting_ft))
-        current_ft = Image.fromarray(current_ft.astype(numpy.uint8))
-        pylab.figure()
-        pylab.imshow(current_ft, cmap=cm.Greys_r)
+        # current_ft = numpy.log(numpy.abs(starting_ft))
+        # current_ft = Image.fromarray(current_ft.astype(numpy.uint8))
+        # pylab.figure()
+        # pylab.imshow(current_ft, cmap=cm.Greys_r)
         
-        current_image = numpy.fft.ifft2(numpy.fft.fftshift(starting_ft))
+        current_image = numpy.fft.fftshift(starting_ft)
+        current_image = numpy.fft.ifft2(current_image)
         
         current_image = Image.fromarray(current_image.astype(numpy.uint8))
         current_image.save(saving_folder + "fpm_image" + filetype)
-        pylab.figure()
-        pylab.imshow(current_image, cmap=cm.Greys_r)
+        # pylab.figure()
+        # pylab.imshow(current_image, cmap=cm.Greys_r)
 
         # At this point we are done with the FPM retreival.
-        pylab.show()
+        # pylab.show()
       else:
        print("No file found. moving to next iteration...")
   # iteration done.
