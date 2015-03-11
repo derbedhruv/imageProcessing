@@ -52,7 +52,7 @@ d = 4.			# distance between LED centers in mm
 l = 83.			# distance from transparency to the LED array in mm
 x = 2.			# distance in x-axis from top left of LED array to first LED's center (mm)
 y = 2.			# distance in y-axis from top left of LED array to first LED's center (mm)
-origin = [14., 18.]	# the origin w.r.t. the top left of the LED array (as seen from +ve z-axis
+origin = [18., 14.]	# the origin w.r.t. the top left of the LED array (as seen from +ve z-axis, remember this is (y,x)
 lmbda = 0.623		# dominant wavelength of the monochromatic light source, in microns
 n = 8			# single dimension of the (square) LED array.
 pixel_size = 3.45	# pixel dimensions in microns
@@ -76,33 +76,22 @@ upsampling_scaling_factor = 2		# the scaling factor by which we will enhance the
 ### FUNCTION DEFINITIONS
 # the circular_mask was copied from http://stackoverflow.com/questions/18352973/mask-a-circular-sector-in-a-numpy-array
 def circular_mask(shape,centre,radius):
-  """
-  Return a boolean mask for a circular sector. The start/stop angles in  
-  `angle_range` should be given in clockwise order.
-  """
   angle_range = [0,360]
-
   x,y = numpy.ogrid[:shape[0],:shape[1]]
   cx,cy = centre
   tmin,tmax = numpy.deg2rad(angle_range)
-
   # ensure stop angle > start angle
   if tmax < tmin:
     tmax += 2*numpy.pi
-
   # convert cartesian --> polar coordinates
   r2 = (x-cx)*(x-cx) + (y-cy)*(y-cy)
   theta = numpy.arctan2(x-cx,y-cy) - tmin
-
   # wrap angles between 0 and 2*pi
   theta %= (2*numpy.pi)
-
   # circular mask
   circmask = r2 <= radius*radius
-
   # angular mask
   anglemask = theta <= (tmax-tmin)
-
   return circmask*anglemask
 
 ## Next we have a function that replaces the sqrt of Intensity of the complex image expressed in the form sqrt(I)*exp(j*Phase) 
@@ -113,12 +102,64 @@ def fienup_intensity_replace(source_image, replacement_intensity_image):
   # i.e. create three individual 2d numpy arrays and multiple them
   replacement_intensity = numpy.abs(replacement_intensity_image)
   source_intensity = numpy.abs(source_image)
-
+  
   # now the multiplication
   target_image = numpy.sqrt(replacement_intensity*source_image/source_intensity)
-
+  
   return target_image
 
+## for ease of debugging, we lump together everything that's happening into a function by itself
+def calculate_everything():
+  # We find the (a,b) in mm, position of the present LED in the xy plane, absolute units.
+  a = round(x + d*i - origin[0], 2)
+  b = round(y + d*j - origin[1], 2)
+  k_denominator = numpy.sqrt(a**2 + b**2 + l**2)
+  
+  # now the most important part - we calculate the wavevector (kx, ky) and scale it to the units of pixels in the fourier domain
+  # explanation:
+  # the image is flipped in both axes w.r.t. the object, so the wavenumber will have to be made -ve in both dimensions
+  # then we use the scaling factor which was calculated earlier.
+  wave_vector = [b*(wave_number/k_denominator)*sfrq_to_px, -a*(wave_number/k_denominator)*sfrq_to_px]
+  k_shift = [int(wave_vector[0] + starting_ft.shape[0]/2), int(wave_vector[1] + starting_ft.shape[1]/2)]
+  print(k_shift)
+
+  print("calculated k-vector. Now will extract the FT of upsampled at (kx, ky) with pupil NA*k")
+  system_ft = numpy.copy(starting_ft)		# make a copy of the upsampled FT
+  k_pupil = circular_mask(starting_ft.shape, k_shift, sfrq_to_px*wave_number*NA)
+  center_pupil = circular_mask(starting_ft.shape, [starting_ft.shape[0]/2, starting_ft.shape[1]/2], sfrq_to_px*wave_number*NA)
+
+  # now we remove a circular section of the spectrum and use that to be the center of the FT of an image
+  system_ft[:] = 0+0j
+  system_ft[center_pupil] = starting_ft[k_pupil]
+        
+  # Now we convert this to an image.
+  generated_lowres_image = numpy.fft.fftshift(system_ft)
+  generated_lowres_image = numpy.fft.ifft2(generated_lowres_image)
+  print(numpy.average(generated_lowres_image))
+        
+  # we then read in the corresponding measured image, and upsample it
+  measured_lowres_image = numpy.array(Image.open(reading_folder + str(i) + str(j) + filetype).convert("L"))
+  measured_highres_image = scipy.misc.imresize(measured_lowres_image, upsampled_size)
+        
+  # going to replace the sqrt(intensity) of the generated image with the intensity of this upsampled measured image
+  replaced_intensity_image = fienup_intensity_replace(generated_lowres_image, measured_highres_image)
+
+  # now we simply have to take its FFT and replace the corresponding section of the FFT in the original FFT where we chopped from
+  replaced_intensity_ft = numpy.fft.fftshift(numpy.fft.fft2(replaced_intensity_image))
+  starting_ft[k_pupil] = replaced_intensity_ft[center_pupil]
+
+  # and this round is done, now go on to the other rounds of replacement
+  # but we will show the image and ft (for debugging)
+  # current_ft = numpy.log(numpy.abs(starting_ft))
+  # current_ft = Image.fromarray(current_ft.astype(numpy.uint8))
+  # pylab.figure()
+  # pylab.imshow(current_ft, cmap=cm.Greys_r)
+        
+  current_image = numpy.fft.fftshift(starting_ft)
+  current_image = numpy.fft.ifft2(current_image)
+        
+  current_image = Image.fromarray(current_image.astype(numpy.uint8))
+  current_image.save(saving_folder + "fpm_image" + filetype)
 
 #### So we'll start by upsampling the one we know is the 'central' one, i.e. who's FT circular mask is in the center
 ####
@@ -164,61 +205,8 @@ for iterations in range(0, number_iterations):
       if (os.path.isfile(reading_folder + "/" +  str(i) + str(j) + filetype)):
         # Now we can move on
         print("..exists. processing...")
-        # We find the (a,b) in mm, position of the present LED in the xy plane, absolute units.
-        a = round(x + d*i - origin[0], 2)
-        b = round(y + d*j - origin[1], 2)
-        k_denominator = numpy.sqrt(a**2 + b**2 + l**2)
+        calculate_everything()
 
-        # now the most important part - we calculate the wavevector (kx, ky) and scale it to the units of pixels in the fourier domain
-        # explanation:
-        # the image is flipped in both axes w.r.t. the object, so the wavenumber will have to be made -ve in both dimensions
-        # then we use the scaling factor which was calculated earlier.
-        wave_vector = [b*(wave_number/k_denominator)*sfrq_to_px, -a*(wave_number/k_denominator)*sfrq_to_px]
-        k_shift = [int(wave_vector[0] + starting_ft.shape[0]/2), int(wave_vector[1] + starting_ft.shape[1]/2)]
-        print(k_shift)
-
-        print("calculated k-vector. Now will extract the FT of upsampled at (kx, ky) with pupil NA*k")
-        system_ft = numpy.copy(starting_ft)		# make a copy of the upsampled FT
-        k_pupil = circular_mask(starting_ft.shape, k_shift, sfrq_to_px*wave_number*NA)
-        center_pupil = circular_mask(starting_ft.shape, [starting_ft.shape[0]/2, starting_ft.shape[1]/2], sfrq_to_px*wave_number*NA)
-
-        # now we remove a circular section of the spectrum and use that to be the center of the FT of an image
-        system_ft[:] = 0+0j
-        system_ft[center_pupil] = starting_ft[k_pupil]
-        
-        # Now we convert this to an image.
-        generated_lowres_image = numpy.fft.fftshift(system_ft)
-        generated_lowres_image = numpy.fft.ifft2(generated_lowres_image)
-        print(numpy.average(generated_lowres_image))
-        
-        # we then read in the corresponding measured image, and upsample it
-        measured_lowres_image = numpy.array(Image.open(reading_folder + str(i) + str(j) + filetype).convert("L"))
-        measured_highres_image = scipy.misc.imresize(measured_lowres_image, upsampled_size)
-        
-        # going to replace the sqrt(intensity) of the generated image with the intensity of this upsampled measured image
-        replaced_intensity_image = fienup_intensity_replace(generated_lowres_image, measured_highres_image)
-
-        # now we simply have to take its FFT and replace the corresponding section of the FFT in the original FFT where we chopped from
-        replaced_intensity_ft = numpy.fft.fftshift(numpy.fft.fft2(replaced_intensity_image))
-        starting_ft[k_pupil] = replaced_intensity_ft[center_pupil]
-
-        # and this round is done, now go on to the other rounds of replacement
-        # but we will show the image and ft (for debugging)
-        # current_ft = numpy.log(numpy.abs(starting_ft))
-        # current_ft = Image.fromarray(current_ft.astype(numpy.uint8))
-        # pylab.figure()
-        # pylab.imshow(current_ft, cmap=cm.Greys_r)
-        
-        current_image = numpy.fft.fftshift(starting_ft)
-        current_image = numpy.fft.ifft2(current_image)
-        
-        current_image = Image.fromarray(current_image.astype(numpy.uint8))
-        current_image.save(saving_folder + "fpm_image" + filetype)
-        # pylab.figure()
-        # pylab.imshow(current_image, cmap=cm.Greys_r)
-
-        # At this point we are done with the FPM retreival.
-        # pylab.show()
       else:
        print("No file found. moving to next iteration...")
   # iteration done.
