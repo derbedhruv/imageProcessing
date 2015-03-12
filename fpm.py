@@ -52,7 +52,7 @@ d = 4.			# distance between LED centers in mm
 l = 83.			# distance from transparency to the LED array in mm
 x = 2.			# distance in x-axis from top left of LED array to first LED's center (mm)
 y = 2.			# distance in y-axis from top left of LED array to first LED's center (mm)
-origin = [18., 14.]	# the origin w.r.t. the top left of the LED array (as seen from +ve z-axis, remember this is (y,x)
+origin = [18., 18.]	# the origin w.r.t. the top left of the LED array (as seen from +ve z-axis, remember this is (y,x)
 lmbda = 0.623		# dominant wavelength of the monochromatic light source, in microns
 n = 8			# single dimension of the (square) LED array.
 pixel_size = 3.45	# pixel dimensions in microns
@@ -111,15 +111,17 @@ def fienup_intensity_replace(source_image, replacement_intensity_image):
 ## for ease of debugging, we lump together everything that's happening into a function by itself
 def calculate_everything():
   # We find the (a,b) in mm, position of the present LED in the xy plane, absolute units.
-  a = round(x + d*i - origin[0], 2)
-  b = round(y + d*j - origin[1], 2)
+  a = -1*round(x + d*i - origin[0], 2)
+  b = -1*round(y + d*j - origin[1], 2)
   k_denominator = numpy.sqrt(a**2 + b**2 + l**2)
-  
+ 
+  print("a,b = " + str(a) + "," + str(b))
+ 
   # now the most important part - we calculate the wavevector (kx, ky) and scale it to the units of pixels in the fourier domain
   # explanation:
   # the image is flipped in both axes w.r.t. the object, so the wavenumber will have to be made -ve in both dimensions
   # then we use the scaling factor which was calculated earlier.
-  wave_vector = [b*(wave_number/k_denominator)*sfrq_to_px, -a*(wave_number/k_denominator)*sfrq_to_px]
+  wave_vector = [a*(wave_number/k_denominator)*sfrq_to_px, b*(wave_number/k_denominator)*sfrq_to_px]
   k_shift = [int(wave_vector[0] + starting_ft.shape[0]/2), int(wave_vector[1] + starting_ft.shape[1]/2)]
   print(k_shift)
 
@@ -130,7 +132,8 @@ def calculate_everything():
 
   # now we remove a circular section of the spectrum and use that to be the center of the FT of an image
   system_ft[:] = 0+0j
-  system_ft[center_pupil] = starting_ft[k_pupil]
+  # system_ft[center_pupil] = starting_ft[k_pupil]
+  system_ft[k_pupil] = starting_ft[k_pupil]
         
   # Now we convert this to an image.
   generated_lowres_image = numpy.fft.fftshift(system_ft)
@@ -146,20 +149,26 @@ def calculate_everything():
 
   # now we simply have to take its FFT and replace the corresponding section of the FFT in the original FFT where we chopped from
   replaced_intensity_ft = numpy.fft.fftshift(numpy.fft.fft2(replaced_intensity_image))
-  starting_ft[k_pupil] = replaced_intensity_ft[center_pupil]
+  # starting_ft[k_pupil] = replaced_intensity_ft[center_pupil]
+  starting_ft[k_pupil] = replaced_intensity_ft[k_pupil]
 
   # and this round is done, now go on to the other rounds of replacement
-  # but we will show the image and ft (for debugging)
-  # current_ft = numpy.log(numpy.abs(starting_ft))
-  # current_ft = Image.fromarray(current_ft.astype(numpy.uint8))
-  # pylab.figure()
-  # pylab.imshow(current_ft, cmap=cm.Greys_r)
+  # but we will show the image and ft (for debugging) 
+  '''
+  current_ft = numpy.log(numpy.abs(starting_ft))
+  current_ft = Image.fromarray(current_ft.astype(numpy.uint8))
+  pylab.figure()
+  pylab.imshow(current_ft, cmap=cm.Greys_r)
         
   current_image = numpy.fft.fftshift(starting_ft)
   current_image = numpy.fft.ifft2(current_image)
         
   current_image = Image.fromarray(current_image.astype(numpy.uint8))
-  current_image.save(saving_folder + "fpm_image" + filetype)
+  # current_image.save(saving_folder + "fpm_image" + filetype)
+  pylab.figure()
+  pylab.imshow(current_image, cmap=cm.Greys_r)
+  pylab.show()
+  '''
 
 #### So we'll start by upsampling the one we know is the 'central' one, i.e. who's FT circular mask is in the center
 ####
@@ -197,7 +206,13 @@ print("FT of the upsampled image calculated and saved. Now begins the stitching 
 # The mask for this shift will be a circle in fourier space with a radius of 2*pi*NA/lambda 
 # first we have a for loop which loops over all the LEDs in the array
 
+
 for iterations in range(0, number_iterations):
+  '''
+  i = 4
+  j = 4
+  calculate_everything()
+  '''
   for i in range(0,n):	# x-direction
     for j in range(0,n):	# y-direction
       # start by checking whether a particular illumination (LED) file exists, if not move on
@@ -205,13 +220,17 @@ for iterations in range(0, number_iterations):
       if (os.path.isfile(reading_folder + "/" +  str(i) + str(j) + filetype)):
         # Now we can move on
         print("..exists. processing...")
-        calculate_everything()
+        if (i == 4 and j == 4):
+          print("leaving out 4,4")
+        else:
+          calculate_everything()
 
       else:
        print("No file found. moving to next iteration...")
+  ''''''
   # iteration done.
   print("ITERATION OVER. will print out image and FT")
-  current_ft = 20*numpy.log(numpy.abs(starting_ft))
+  current_ft = numpy.log(numpy.abs(starting_ft))
   current_ft = Image.fromarray(current_ft.astype(numpy.uint8))
   pylab.figure()
   pylab.imshow(current_ft, cmap=cm.Greys_r)
