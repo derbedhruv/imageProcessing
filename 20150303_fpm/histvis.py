@@ -1,13 +1,20 @@
 # This will enable us to visualize the histograms of the images which have been acquired, and, if not good, to stretch them to max contrast
-import Image, os
-from numpy import *
+import Image, os, sys
+import numpy 
 import matplotlib.pyplot as plt
+
+# Next we include the histogram equalization function which is presnt in the folder above..
+sys.path.append('../')
+import histeq
 
 for i in range(0,7):
   for j in range(0,7):
     filename = str(i) + str(j) + '.jpg'
     if(os.path.isfile('./' + filename)):
-      im = array(Image.open(filename).convert('L'))
+      im = numpy.array(Image.open(filename).convert('L'))
+      
+      # im, cdf = histeq.histeq(im)
+
       plt.hist(im.ravel(),256,[0,256],histtype='step')
 
 plt.show()
