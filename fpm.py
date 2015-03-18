@@ -62,7 +62,7 @@ magnification = 2	# image magnification w.r.t. object by the objective
 pi = 3.141592		# apple pie
 
 ## System constants
-reading_folder = "./20150303_fpm/"	# the folder where the files of the name given above lie..
+reading_folder = "./20150303_fpm/histeq/"	# the folder where the files of the name given above lie..
 saving_folder = "./images/fpm/"	# the folder where we'll save the various iterations of the images and their FTs to
 filetype = ".jpg"
 filename = "44"		# the chosen file to be the upsampled guess image, or starting point 

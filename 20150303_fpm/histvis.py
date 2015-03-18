@@ -13,11 +13,13 @@ for i in range(0,7):
     filename = str(i) + str(j) + '.jpg'
     if(os.path.isfile('./' + filename)):
       im = numpy.array(Image.open(filename).convert('L'))
-      
+     
+      ''' 
       im, cdf = histeq.histeq(im)
       im = Image.fromarray(im.astype(numpy.uint8))
       im.save('histeq/' + str(i) + str(j) + '.jpg')
+      '''
 
-      # plt.hist(im.ravel(),256,[0,256],histtype='step')
+      plt.hist(im.ravel(),256,[0,256],histtype='step')
 
 plt.show()
