@@ -1,0 +1,5 @@
+1. brighter light means more saturation and diffraction around sharp features
+2. lower brightness used for teh usaf target for this reason
+3. camera and eyepiece see images the same way up
+4. higher mag lenses were getting dimmer ... even though the NA was increasing
+5. the usaf target had to be kept on a blank slide since it wasnt fitting in the slot
