@@ -5,10 +5,16 @@
 import Image, numpy, pylab, matplotlib.cm as cm
 
 ## GLOBAL DEFINITIONS
-pixel_size = 1.58	# dimesion of pixel in microns
+pixel_size = 3.45	# actual dimension of camera sensor pixel
 pi = 3.141592
+magnification = 2.	
 
-u = Image.open("usaf.JPG").convert("L")
+# size of object we want to resolve
+object_size = 20.0	# microns
+print(object_size)
+print("microns")
+
+u = Image.open("./data/20150319_fpm/USAF_1_2X_lightLevel6.jpg").convert("L")
 
 usaf = numpy.array(u)
 usaf_width = usaf.shape[0]
@@ -61,7 +67,7 @@ def band_stop(target_image, freq, spread):
   
   # convert the 'frequency' into pixels
   nyquist_freq = 1.00/(2*pixel_size)		# units of micron-1, this is the max freqyency which can be resolved by this fft
-  frequency = 4.*(freq/nyquist_freq)*(target_image.shape[1]/2)	# multiplying by 4 because somehow it works this way
+  frequency = (1/magnification)*(freq/nyquist_freq)*(target_image.shape[1]/2)	
   
   # define two circular masks with radius (frequency - spread) and (frequency + spread)
   # inner = circular_mask(target_image.shape, center, (frequency - spread))
@@ -100,13 +106,8 @@ def band_stop(target_image, freq, spread):
   return band_stopped_image
 
 ## now the section where we apply everything..
-# we start by calculating the frequency where we would like to remove (dependent on the object size)
-# first we need the size of the object we want to attenuate
-object_size = 100.0	# microns
-print(object_size)
-print("microns")
 
-# freqyency calculatins...
+# calculating the frequency corresponding to the object size we need...
 object_frequency = 1.00/(2*object_size)		# again in micron-1
 
 # then apply the circular frequency mask..
